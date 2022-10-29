@@ -168,8 +168,8 @@ pub fn rev_seq(name: &Option<String>, conv: Option<String>) -> Result<()>{
                 }
             } else if x == "m".to_string() {
                 let map_ha =HashMap::from([
-                    ('A','T'), ('G','C'), ('C','G'), ('T','A'),
-                    ('a','t'), ('g','c'), ('c','g'), ('t','a')]);
+                    ('A','T'), ('G','C'), ('C','G'), ('T','A'), ('N','N'),
+                    ('a','t'), ('g','c'), ('c','g'), ('t','a'), ('n','n')]);
         
                 for (k,v) in &seq { 
                     println!("{}",k);
