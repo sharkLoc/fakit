@@ -61,7 +61,7 @@ fn main() {
             sum,
         } => {
             let n = env::args().collect::<Vec<String>>().iter().count();
-            if n < 3 {
+            if n < 2 {
                 eprintln!("[info] error: type \"--help\"  for more information\n");
                 std::process::exit(1);
             }
