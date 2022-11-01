@@ -29,9 +29,9 @@ pub fn is_gzipped(file_name: &str) -> Result<bool> {
 pub fn file_reader(file_in: &Option<String>) -> Result<Box<dyn BufRead>> {
     if let Some(file_name) = file_in {
         let fp = File::open(file_name)?;
-        let flag = is_gzipped(&file_name)?;
+        let flag = is_gzipped(file_name)?;
 
-        if flag == true {
+        if flag {
             Ok(
                 Box::new( 
                     BufReader::with_capacity( 1024 * 256, read::GzDecoder::new(fp) )

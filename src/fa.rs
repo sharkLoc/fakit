@@ -6,8 +6,8 @@ use std::{
     },
     io::{
         Result,
-        BufRead,
-    }, 
+        BufRead
+    },
 };
 
 
@@ -18,62 +18,54 @@ pub fn upper_lower_fa(name: &Option<String>, flag: bool) -> Result<()> {
    
     let fp = file_reader(name)?;
     if flag {
-        for line in fp.lines() {
-            if let Ok(tx) = line {
-                if tx.starts_with(">"){
-                    println!("{}",tx);
-                } else {
-                    println!("{}",tx.to_uppercase());
-                } 
-            }
+        for line in fp.lines().flatten() {
+            if line.starts_with('>'){
+                println!("{}",line);
+            } else {
+                println!("{}",line.to_uppercase());
+            } 
         }
     } else {
-        for line in fp.lines() {
-            if let Ok(tx) = line {
-                if tx.starts_with(">"){
-                    println!("{}",tx);
-                } else {
-                    println!("{}",tx.to_lowercase());
-                } 
-            }
+        for line in fp.lines().flatten() {
+            if line.starts_with('>'){
+                println!("{}",line);
+            } else {
+                println!("{}",line.to_lowercase());
+            } 
         }
     }
-    
     Ok(())
 }
 
 
 pub fn seq_len(name: &Option<String>, w: Option<u64>) -> Result<()> {
+
     let fp = file_reader(name)?;
     if let Some(w) = w {
         if w == 0 {
             let mut flag: bool = false;
-            for line in fp.lines() {
-                if let Ok(tx) = line {
-                    if tx.starts_with(">"){
-                        if flag {
-                            println!();  
-                        } else {
-                            flag = true;
-                        }
-                        println!("{}",tx);
+            for line in fp.lines().flatten() {
+                if line.starts_with('>'){
+                    if flag {
+                        println!();  
                     } else {
-                        print!("{}",tx);
-                    } 
-                }
+                        flag = true;
+                    }
+                    println!("{}",line);
+                } else {
+                    print!("{}",line);
+                } 
             }
             println!()
         } else {
             let mut seq = BTreeMap::new();
             let mut id = String::new();
-            for line in fp.lines() {
-                if let Ok(tx) = line {
-                    if tx.starts_with(">") {
-                        id = tx.strip_prefix(">").unwrap().to_string();
-                        seq.insert(id.clone(), String::from(""));
-                    } else {
-                        seq.entry(id.clone()).or_insert("".to_string()).push_str(tx.as_str());                        
-                    }
+            for line in fp.lines().flatten() {
+                if line.starts_with('>') {
+                    id = line.strip_prefix('>').unwrap().to_string();
+                    seq.insert(id.clone(), String::from(""));
+                } else {
+                    seq.entry(id.clone()).or_insert_with(|| "".to_string()).push_str(line.as_str());                      
                 }
             }
             // keep raw order 
@@ -100,18 +92,17 @@ pub fn seq_len(name: &Option<String>, w: Option<u64>) -> Result<()> {
 
 
 pub fn fake_quality(name: &Option<String>, q: Option<char>) -> Result<()> {
+
     let fp = file_reader(name)?;
     let mut seq = BTreeMap::new();
     let mut id = String::new();
-    for line in fp.lines() {
-        if let Ok(tx) = line {
-            if tx.starts_with(">") {
-                id = tx.replace(">", "@");
-                seq.insert(id.clone(), String::from(""));
-            } else {
-                seq.entry(id.clone()).or_insert("".to_string()).push_str(tx.as_str());                        
-            }
-         }
+    for tx in fp.lines().flatten() {
+        if tx.starts_with('>') {
+            id = tx.replace('>', "@");
+            seq.insert(id.clone(), String::from(""));
+        } else {
+            seq.entry(id.clone()).or_insert_with(|| "".to_string()).push_str(tx.as_str());                        
+        }
     }
     for (k,v) in seq {
         println!("{}\n{}\n+\n{}",k,v,q.unwrap().to_string().repeat(v.len()));
@@ -125,14 +116,12 @@ pub fn drop_short(name: &Option<String>, ds: Option<u64>) -> Result<()> {
     if let Some(d) = ds {
         let mut seq = BTreeMap::new();
         let mut id = String::new();
-        for line in fp.lines() {
-            if let Ok(tx) = line {
-                if tx.starts_with(">") {
-                    id = tx;
-                    seq.insert(id.clone(), String::from(""));
-                } else {
-                    seq.entry(id.clone()).or_insert("".to_string()).push_str(tx.as_str());                        
-                }
+        for tx in fp.lines().flatten() {
+            if tx.starts_with('>') {
+                id = tx;
+                seq.insert(id.clone(), String::from(""));
+            } else {
+                seq.entry(id.clone()).or_insert_with(|| "".to_string()).push_str(tx.as_str());                        
             }
         }
         // filter 
@@ -150,23 +139,21 @@ pub fn rev_seq(name: &Option<String>, conv: Option<String>) -> Result<()>{
     let fp = file_reader(name)?;
     let mut seq = BTreeMap::new();
     let mut id = String::new();
-    for line in fp.lines() {
-        if let Ok(tx) = line {
-            if tx.starts_with(">") {
-                id = tx;
-                seq.insert(id.clone(), String::from(""));
-            } else {
-                seq.entry(id.clone()).or_insert("".to_string()).push_str(tx.as_str());                        
-            }
+    for tx in fp.lines().flatten() {
+        if tx.starts_with('>') {
+            id = tx;
+            seq.insert(id.clone(), String::from(""));
+        } else {
+            seq.entry(id.clone()).or_insert_with(|| "".to_string()).push_str(tx.as_str());                        
         }
     }
     match conv {
         Some(x) => {
-            if x == "r".to_string() {
+            if x == *"r" {
                 for (k,v) in &seq {
                     println!("{}\n{}", k, v.chars().rev().collect::<String>());
                 }
-            } else if x == "m".to_string() {
+            } else if x == *"m" {
                 let map_ha =HashMap::from([
                     ('A','T'), ('G','C'), ('C','G'), ('T','A'), ('N','N'),
                     ('a','t'), ('g','c'), ('c','g'), ('t','a'), ('n','n')]);
@@ -244,29 +231,27 @@ pub fn summary_fa(name: &Option<String>) -> Result<()> {
     let mut content: BTreeMap<String, Iterm> = BTreeMap::new();
     let mut id = String::new();
 
-    for liner in fp.lines() {
-        if let Ok(line) = liner {
-            if line.starts_with(">"){
-                id = line.replace(">", "");
-                content.insert(id.clone(), Iterm::new());
-                content.get_mut(&id).unwrap().id = id.clone();
-            } else {
-                let seq = line.to_uppercase();
-                let (nta, ntt, ntg, ntc, ntn) = conut_seq(&seq);
-                let lens = nta + ntt + ntg + ntc + ntn;
+    for line in fp.lines().flatten() {
+        if line.starts_with('>'){
+            id = line.replace('>', "");
+            content.insert(id.clone(), Iterm::new());
+            content.get_mut(&id).unwrap().id = id.clone();
+        } else {
+            let seq = line.to_uppercase();
+            let (nta, ntt, ntg, ntc, ntn) = conut_seq(&seq);
+            let lens = nta + ntt + ntg + ntc + ntn;
 
-                content.get_mut(&id).unwrap().A += nta;
-                content.get_mut(&id).unwrap().T += ntt;
-                content.get_mut(&id).unwrap().G += ntg;
-                content.get_mut(&id).unwrap().C += ntc;
-                content.get_mut(&id).unwrap().N += ntn;
-                content.get_mut(&id).unwrap().len += lens;
-            }
+            content.get_mut(&id).unwrap().A += nta;
+            content.get_mut(&id).unwrap().T += ntt;
+            content.get_mut(&id).unwrap().G += ntg;
+            content.get_mut(&id).unwrap().C += ntc;
+            content.get_mut(&id).unwrap().N += ntn;
+            content.get_mut(&id).unwrap().len += lens;
         }
     }
-
-    println!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", "id", "base_A", "base_T", "base_G", "base_C", "base_N", "GC_Rate", "seq_Len");
-    for (_, info) in &mut content {
+    println!("id\tbase_A\tbase_T\tbase_G\tbase_C\tbase_N\tGC_Rate\tseq_Len");
+    
+    for info in content.values_mut() {
         info.GC = info.gc();
         info.show();
     }

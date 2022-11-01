@@ -30,7 +30,7 @@ struct Args {
     len: Option<u64>,
     
     /// fasta to fastq and generate fake fastq quality.
-    #[arg(short = 'f', long = "fake")]
+    #[arg(short = 'F', long = "fake")]
     fake: Option<char>,  
 
     /// drop sequences with length shorter than int.
@@ -49,8 +49,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    match args {
-        Args {
+    let Args {
             input,
             upper,
             lower,
@@ -59,34 +58,33 @@ fn main() {
             drop,
             conv,
             sum,
-        } => {
-            let n = env::args().collect::<Vec<String>>().iter().count();
-            if n < 2 {
-                eprintln!("[info] error: type \"--help\"  for more information\n");
-                std::process::exit(1);
-            }
-            if upper {
-                let _ = upper_lower_fa(&input, true);
-            } 
-            if lower {
-                let _ = upper_lower_fa(&input, false);
-            }
-            if let Some(_) = len {
-                let _ = seq_len(&input, len);
-            }
-            if let Some(_) = fake {
-                let _ = fake_quality(&input, fake);
-            };
-            if let Some(_) = drop {
-                let _ = drop_short(&input, drop);
-            }
-            if let Some(_) = conv {
-                let _ = rev_seq(&input, conv);
-            }
-            if sum {
-                let _ = summary_fa(&input);
-            }
+        } = args;
+
+        let n = env::args().collect::<Vec<String>>().iter().len();
+        if n < 3 {
+            eprintln!("[info] error: type \"--help\"  for more information\n");
+            std::process::exit(1);
         }
-    }
+        if upper {
+            let _ = upper_lower_fa(&input, true);
+        } 
+        if lower {
+            let _ = upper_lower_fa(&input, false);
+        }
+        if len.is_some() {
+            let _ = seq_len(&input, len);
+        }
+        if fake.is_some() {
+            let _ = fake_quality(&input, fake);
+        };
+        if drop.is_some() {
+            let _ = drop_short(&input, drop);
+        }
+        if conv.is_some() {
+            let _ = rev_seq(&input, conv);
+        }
+        if sum {
+            let _ = summary_fa(&input);
+        }
    
 }
