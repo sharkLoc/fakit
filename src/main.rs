@@ -10,7 +10,7 @@ use fa::*;
 #[command(
     author = "size_t",
     version = "version 0.1",
-    about = "fqkit: a simple program for fasta file manipulation",
+    about = "fakit: a simple program for fasta file manipulation",
     long_about = None
 )]
 struct Args {
