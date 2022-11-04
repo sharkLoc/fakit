@@ -14,7 +14,7 @@ cargo b --release
 
 ```bash
 fakit -h
-fqkit: a simple program for fasta file manipulation
+fakit: a simple program for fasta file manipulation
 
 Usage: fakit [OPTIONS] [INPUT]
 
