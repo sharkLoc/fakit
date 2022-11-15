@@ -34,7 +34,7 @@ pub fn file_reader(file_in: &Option<String>) -> Result<Box<dyn BufRead>> {
         if flag {
             Ok(
                 Box::new( 
-                    BufReader::with_capacity( 1024 * 256, read::GzDecoder::new(fp) )
+                    BufReader::with_capacity( 1024 * 256, read::MultiGzDecoder::new(fp) )
                 )
             )
         } else {
