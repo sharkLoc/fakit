@@ -2,7 +2,14 @@
 name = "fakit"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["sharkLoc <mmtinfo@163.com>"]
+rust-version = "1.65.0"
+homepage = "https://github.com/sharkLoc/fakit"
+description = "fakit: a simple program for fasta file manipulation"
+keywords = ["fasta", "fa", "cli", "sequence"]
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
