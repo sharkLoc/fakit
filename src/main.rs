@@ -1,129 +1,227 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
+use anyhow::{Error, Ok};
 
-mod format;
-mod index;
-mod stats;
+
+
+mod top;
+use top::*;
+mod fa2fq;
+use fa2fq::*;
+mod faidx;
+use faidx::*;
+mod relen;
+use relen::*;
+mod rename;
+use rename::*;
+mod subfa;
+use subfa::*;
+mod summ;
+use summ::*;
+mod split;
+use split::*;
 mod utils;
-
-use format::*;
-use index::*;
-use stats::*;
-
 
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.0",
+    version = "version 0.2.1",
     about = "fakit: a simple program for fasta file manipulation",
-    long_about = None
+    long_about = None,
+    next_line_help = false
 )]
-
 struct Args {
     #[clap(subcommand)]
     command: Subcli,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Subcommand, Debug)]
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 enum Subcli {
-    /// summary fasta file
-    summ {
+    // check id
+    //check {},
+    // dup
+    //dup {},
+    /// get first N records from fasta file
+    topn {
         /// input fasta[.gz] file
-        input: Option<String>,
-    },
-    /// state fasta file
-    stats {
-        /// input fasta.[gz] file
-        input: Option<String>,
-    },
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// print first N fasta records
+        #[arg(short = 'n', long = "num", default_value_t = 10)]
+        num: usize,
+        /// output fasta[.gz] file name, or write to stdout
+        output: Option<String>,
+    }, 
     /// convert fasta to fastq file
     fa2fq {
-        /// input fasta.[gz] file
-        input: Option<String>,
-
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
         /// fasta to fastq and generate fake fastq quality.
         #[arg(short = 'q', long = "qual", default_value_t = 'F')]
         qual: char,
-
-        /// output file name[.gz], or write to stdout
-        #[arg(short = 'o', long = "out")]
-        out: Option<String>,
+        /// output fastq file name[.gz], or write to stdout
+        output: Option<String>,
     },
-    /// crate index for fasta file
+    /// crate index and random access to fasta files
     faidx {
-        /// input fasta file
-        input: Option<String>,
+        /// input uncompressed fasta file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// fasta region format and start is 1-based, eg. chr1:1-5000 chr2:100-800
+        /// usage:
+        ///     fakit faidx -i seq.fa chr1:1-5000 chr2:100-800 ...
+        #[arg(verbatim_doc_comment)]
+        region: Option<Vec<String>>,
     },
-    /// format fasta file
-    fmt {
-        /// input fasta.[gz] file
-        input: Option<String>,
-
-        /// specify each seq length, 0 for a single line
+    /// re-length fasta sequence 
+    relen {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// specify each seq length, 0 for a single line  
         #[arg(short = 'l', long = "len", default_value_t = 70)]
-        len: u64,
-
+        len: usize,
+        /// output fasta[.gz] file name, or write to stdout
+        #[arg(short = 'o', long = "out")]
+        output: Option<String>,
+    }, 
+    /// rename sequence id in fasta file
+    rename {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// if specified, keep sequence id description
+        #[arg(short = 'k', long = "keep")]
+        keep: bool, 
+        /// set new id prefix for sequence
+        #[arg(short = 'p', long = "prefix")]
+        prefix: Option<String>,
         /// output fasta[.gz] file name, or write to stdout
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
+    /// subsample sequences from big fasta file
+    subfa {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// set rand seed
+        #[arg(short = 's', long = "seed", default_value_t = 69)]
+        seed: u64,
+        /// reduce much memory but cost more time
+        #[arg(short = 'r', long = "rdc")]
+        rdc: bool,
+        /// subseq number
+        #[arg(short = 'n', long = "num")]
+        num: usize,
+        /// output fasta[.gz] file name, or write to stdout
+        #[arg(short = 'o', long = "out")]
+        output: Option<String>,
+    },
+    /* 
+    /// search pat 
+    search {}, */
+    /// split fasta file by sequence id
+    split {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// set file extension, eg. fa, fa.gz, fna, fna.gz
+        #[arg(short = 'e', long = "ext")]
+        ext: String,
+        /// split fasta file output dir, default: current dir
+        #[arg(short = 'o', long = "outdir")]
+        outdir: Option<String>,
+    },
+    /// a simple summary for DNA fasta files
+    summ {
+        /// files to process, eg. *.fasta
+        /// usage:
+        ///     fakit summ *.fa[.gz]
+        ///     fakit summ  query.fa tmp.fasta demo.fa.gz --all
+        #[arg(verbatim_doc_comment)]
+        file: Vec<String>,
+        /// if specified, show more information
+        #[arg(short='a', long="all")]
+        all: bool,
+    }
 }
 
-fn main() {
+fn main() -> Result<(),Error> {
+
     let args = Args::parse();
+
     match args.command {
-        Subcli::summ { input } => {
-            if let Some(input) = input {
-                let _x = summary_fa(&Some(input.as_str()));    
+        Subcli::topn { input, num, output } => {
+            if let Some(output) = output {
+                top_n_records(num, &Some(&input), &Some(&output))?;
             } else {
-                let _x = summary_fa(&None);
+                top_n_records(num, &Some(&input), &None)?;
             }
         }
-        Subcli::stats { input } => {
-            if let Some(input) = input {
-                let _x = stats_fa(&Some(input.as_str()));
+        Subcli::fa2fq { input, qual, output } => {
+            if let Some(output) = output {
+                fake_quality(&Some(&input), qual, &Some(&output))?;
             } else {
-                let _x = stats_fa(&None);
+                fake_quality(&Some(&input), qual, &None)?;
             }
         }
-        Subcli::fa2fq { input, qual, out } => {
-            if let Some(input) = input {
-                if let Some(out) = out {
-                    let _x = fake_quality(&Some(&input), qual, &Some(&out));    
-                } else {
-                    let _x = fake_quality(&Some(&input), qual, &None);
-                }    
+        Subcli::faidx { input,region /*output*/ } => {
+            if let Some(region) = region {
+                index_reader(&input, region)?;
+                
             } else {
-                if let Some(out) = out {
-                    let _x = fake_quality(&None, qual, &Some(&out));    
+                index_fasta(&input)?;
+            }
+        }
+        Subcli::relen { input, len, output } => {
+            if let Some(output) = output {
+                relen_fa(&Some(&input), len, &Some(&output))?;
+            } else {
+                relen_fa(&Some(&input), len, &None)?;
+            }
+        }
+        Subcli::rename { input, keep, prefix, output} => {
+            if let Some(output) = output {
+                rename_fa(&Some(&input), keep, prefix, &Some(&output))?;
+            } else {
+                rename_fa(&Some(&input), keep, prefix, &None)?;
+            }
+        }
+        Subcli::subfa {
+            input,
+            seed,
+            num,
+            rdc,
+            output,
+        } => {
+            if rdc {
+                if let Some(out) = output {
+                    select_fasta(&Some(&input), num, seed, &Some(&out))?;
                 } else {
-                    let _x = fake_quality(&None, qual, &None);
+                    select_fasta(&Some(&input), num, seed, &None)?;
+                }
+            } else {
+                if let Some(out) = output {
+                    select_fasta2(&Some(&input), num, seed, &Some(&out))?;
+                } else {
+                    select_fasta2(&Some(&input), num, seed, &None)?;
                 }
             }
         }
-        Subcli::faidx { input } => { 
-            if let Some(file) = input {
-                let _x = index_fasta(&Some(&file), &Some(format!("{}.fai",file.as_str()).as_str()) );
-            } else {
-                eprintln!("[error]: need specify a fasta file name");
-                std::process::exit(1);
-            }
+        Subcli::summ { file ,all} => {
+            summary_fa(file, all)?;
         }
-        Subcli::fmt { input, len, output } => {
-            if let Some(input) = input {
-                if let Some(output) = output {
-                    let _x = format_fa(&Some(&input), len, &Some(&output));        
-                } else {
-                    let _x = format_fa(&Some(&input), len, &None);
-                }
+        Subcli::split { input, ext, outdir } => {
+            if let Some(outdir) = outdir {
+                split_fa(input, ext, Some(&outdir))?;
             } else {
-                if let Some(output) = output {
-                    let _x = format_fa(&None, len, &Some(&output));
-                } else {
-                    let _x = format_fa(&None, len, &None);
-                }
-            } 
+                split_fa(input, ext, None)?;
+            }
         }
     }
+
+    Ok(())
 }
