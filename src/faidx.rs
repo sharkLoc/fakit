@@ -76,28 +76,35 @@ pub fn index_reader(
     let mut faidx = IndexedReader::from_file(&name).unwrap();
     for reg in &region {
         let each_reg: Vec<&str> = reg.split(|c| c == ':' || c == '-').collect();
-        if each_reg.len() == 3 || each_reg.len() == 1{
+        if each_reg.len() == 3 {
             let start = each_reg[1].parse::<u64>()? - 1; //  start is 0-based, inclusive
-        let end = each_reg[2].parse::<u64>()?;       //  stop is 0-based, exclusive
-        if start > end {
-            eprintln!("[warn]: Failed to fetch sequence in {}, skip",reg);
-            continue;
-        }
-        // changge file pointer
-        faidx.fetch(each_reg[0], start, end)?;
-
-        let mut n = 0usize;
-        println!(">{}",reg);
-        for x in faidx.read_iter()? {
-            n += 1;
-            print!("{}",x? as char);
-            if n == 70 {
-                print!("\n");
-                n = 0;
+            let end = each_reg[2].parse::<u64>()?;       //  stop is 0-based, exclusive
+            if start > end {
+                eprintln!("[warn]: Failed to fetch sequence in {}, skip",reg);
+                continue;
             }
-        }
-        let len = end - start ;
-        if len % 70 != 0 { println!(); }
+            // changge file pointer
+            faidx.fetch(each_reg[0], start, end)?;
+
+            let mut n = 0usize;
+            println!(">{}",reg);
+            for x in faidx.read_iter()? {
+                n += 1;
+                print!("{}",x? as char);
+                if n == 70 {
+                    print!("\n");
+                    n = 0;
+                }
+            }
+            let len = end - start ;
+            if len % 70 != 0 { println!(); }
+        } else if each_reg.len() == 1{
+            faidx.fetch_all(each_reg[0])?;
+            println!(">{}",reg);
+            for x in faidx.read_iter()? {
+                print!("{}",x? as char); 
+            }
+            println!();
         } else {
             eprintln!("[warn]: Failed to parse region {}, skip",reg);
             continue;
