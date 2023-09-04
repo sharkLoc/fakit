@@ -76,17 +76,13 @@ pub fn index_reader(
     let mut faidx = IndexedReader::from_file(&name).unwrap();
     for reg in &region {
         let each_reg: Vec<&str> = reg.split(|c| c == ':' || c == '-').collect();
-        if each_reg.len() != 3 {
-            eprintln!("[warn]: Failed to fetch sequence in {}, skip",reg);
-            continue;
-        }
-        let start = each_reg[1].parse::<u64>()? - 1; //  start is 0-based, inclusive
+        if each_reg.len() == 3 || each_reg.len() == 1{
+            let start = each_reg[1].parse::<u64>()? - 1; //  start is 0-based, inclusive
         let end = each_reg[2].parse::<u64>()?;       //  stop is 0-based, exclusive
-        if start < end {
+        if start > end {
             eprintln!("[warn]: Failed to fetch sequence in {}, skip",reg);
             continue;
         }
-
         // changge file pointer
         faidx.fetch(each_reg[0], start, end)?;
 
@@ -102,6 +98,11 @@ pub fn index_reader(
         }
         let len = end - start ;
         if len % 70 != 0 { println!(); }
+        } else {
+            eprintln!("[warn]: Failed to parse region {}, skip",reg);
+            continue;
+        }
+        
     }
     
     Ok(())

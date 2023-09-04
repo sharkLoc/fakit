@@ -168,7 +168,7 @@ fn main() -> Result<(),Error> {
                 fake_quality(&Some(&input), qual, &None)?;
             }
         }
-        Subcli::faidx { input,region /*output*/ } => {
+        Subcli::faidx { input, region } => {
             if let Some(region) = region {
                 index_reader(&input, region)?;
                 
