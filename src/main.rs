@@ -13,6 +13,8 @@ mod relen;
 use relen::*;
 mod rename;
 use rename::*;
+mod slide;
+use slide::silding_window;
 mod subfa;
 use subfa::*;
 mod summ;
@@ -38,10 +40,6 @@ struct Args {
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 enum Subcli {
-    // check id
-    //check {},
-    // dup
-    //dup {},
     /// get first N records from fasta file
     topn {
         /// input fasta[.gz] file
@@ -102,6 +100,25 @@ enum Subcli {
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
+    /// stat dna fasta gc content by sliding windows
+    window {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// set sliding window size
+        #[arg(short = 'w', long = "window", default_value_t = 500)]
+        wind: usize,
+        /// set sliding window step size
+        #[arg(short= 's', long = "step", default_value_t = 100)]
+        step: usize,
+        /// if specified, keep fasta format in output result
+        #[arg(short = 'k', long = "keep")]
+        keep: bool,
+        /// output result[.gz] file name, or write to stdout
+        /// header format: seqid    start   end gc_rate sequence
+        #[arg(short = 'o', long = "out",verbatim_doc_comment )]
+        output: Option<String>,
+    },
     /// subsample sequences from big fasta file
     subfa {
         /// input fasta[.gz] file
@@ -120,9 +137,6 @@ enum Subcli {
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
-    /* 
-    /// search pat 
-    search {}, */
     /// split fasta file by sequence id
     split {
         /// input fasta[.gz] file
@@ -190,13 +204,14 @@ fn main() -> Result<(),Error> {
                 rename_fa(&Some(&input), keep, prefix, &None)?;
             }
         }
-        Subcli::subfa {
-            input,
-            seed,
-            num,
-            rdc,
-            output,
-        } => {
+        Subcli::window { input, wind, step, keep, output } => {
+            if let Some(output) = output {
+                silding_window(step, wind, &input, &Some(&output), keep)?;
+            } else {
+                silding_window(step, wind, &input, &None, keep)?;
+            }
+        }
+        Subcli::subfa { input, seed, num, rdc, output} => {
             if rdc {
                 if let Some(out) = output {
                     select_fasta(&Some(&input), num, seed, &Some(&out))?;

@@ -36,18 +36,6 @@ pub fn rename_fa(
             fo.write_record(&record)?;
         }
     }
-    
-    /*for rec in fp.records().flatten() {
-        n += 1;
-        let newid = format!("{}{}",prefix,n);
-        let record = if keep { 
-            Record::with_attrs(&newid, rec.desc(), rec.seq()) 
-        } else { 
-            Record::with_attrs(&newid, None, rec.seq())
-        };
-        fo.write_record(&record)?;
-        
-    }*/
 
     Ok(())
 }
