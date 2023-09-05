@@ -26,7 +26,7 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.1",
+    version = "version 0.2.3",
     about = "fakit: a simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false
