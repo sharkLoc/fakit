@@ -32,6 +32,7 @@ Commands:
   faidx   crate index and random access to fasta files
   relen   re-length fasta sequence
   rename  rename sequence id in fasta file
+  window  stat dna fasta gc content by sliding windows
   subfa   subsample sequences from big fasta file
   split   split fasta file by sequence id
   summ    a simple summary for DNA fasta files
