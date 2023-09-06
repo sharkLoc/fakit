@@ -1,8 +1,6 @@
 use clap::{Parser, Subcommand};
 use anyhow::{Error, Ok};
 
-
-
 mod top;
 use top::*;
 mod fa2fq;
@@ -13,8 +11,10 @@ mod relen;
 use relen::*;
 mod rename;
 use rename::*;
+mod search;
+use search::*;
 mod slide;
-use slide::silding_window;
+use slide::*;
 mod subfa;
 use subfa::*;
 mod summ;
@@ -26,10 +26,10 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.3",
+    version = "version 0.2.4",
     about = "fakit: a simple program for fasta file manipulation",
     long_about = None,
-    next_line_help = false
+    next_line_help = true
 )]
 struct Args {
     #[clap(subcommand)]
@@ -116,6 +116,21 @@ enum Subcli {
         keep: bool,
         /// output result[.gz] file name, or write to stdout
         /// header format: seqid    start   end gc_rate sequence
+        #[arg(short = 'o', long = "out",verbatim_doc_comment )]
+        output: Option<String>,
+    },
+    /// search subsequences/motifs from fasta file
+    search {
+        /// input fasta[.gz] file
+        #[arg(short = 'i', long = "input")]
+        input: String,
+        /// specify uppercase pattern/motif, e.g., -p "ATC{2,}" or -p ATCCG
+        #[arg(short = 'p', long = "pattern")]
+        pat: String,
+        /// if specified, show header in result
+        #[arg(short = 'H', long = "header")]
+        Header: bool,
+        /// output search result[.gz] file name, or write to stdout
         #[arg(short = 'o', long = "out",verbatim_doc_comment )]
         output: Option<String>,
     },
@@ -209,6 +224,13 @@ fn main() -> Result<(),Error> {
                 silding_window(step, wind, &input, &Some(&output), keep)?;
             } else {
                 silding_window(step, wind, &input, &None, keep)?;
+            }
+        }
+        Subcli::search { input, pat, Header, output } => {
+            if let Some(output) = output {
+                search_fa(&input, &Some(&output), &pat ,Header)?;
+            } else {
+                search_fa(&input, &None, &pat, Header)?;
             }
         }
         Subcli::subfa { input, seed, num, rdc, output} => {
