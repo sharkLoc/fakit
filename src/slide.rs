@@ -43,6 +43,7 @@ pub fn silding_window(
                     format!("{}\t{}\t{}\t{:.4}\t{}\n",rec.id(), start+1, len, gc, fa_str)
                 };
                 fo.write(out.as_bytes())?;
+                windows = wind;
                 break;
             }
         }
