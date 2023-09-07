@@ -3,10 +3,12 @@ use std::io::BufRead;
 use crate::utils::*;
 use bio::io::fasta::IndexedReader;
 use anyhow::Error;
+use log::*;
 
 pub fn index_fasta(
     name: &str,
 ) -> Result<(), Error> {
+    info!("crate faidx for {}",name);
     let out = format!("{}.fai",name);
     let fp = file_reader(&Some(name))?;
     let mut fo = file_writer(&Some(&out))?;
@@ -42,7 +44,7 @@ pub fn index_fasta(
             } 
             if let Some(each) = each_len {
                 if len > each {
-                    eprintln!("[error]: Different line length in line '{}'",order);
+                    error!("Different line length in line {} ",order);
                     std::process::exit(1);
                 }
             }
@@ -73,6 +75,7 @@ pub fn index_reader(
     if !std::path::Path::new(&fai).exists() {
         index_fasta(name)?;
     }
+    info!("read index file: {}",fai);
     let mut faidx = IndexedReader::from_file(&name).unwrap();
     for reg in &region {
         let each_reg: Vec<&str> = reg.split(|c| c == ':' || c == '-').collect();
@@ -80,7 +83,7 @@ pub fn index_reader(
             let start = each_reg[1].parse::<u64>()? - 1; //  start is 0-based, inclusive
             let end = each_reg[2].parse::<u64>()?;       //  stop is 0-based, exclusive
             if start > end {
-                eprintln!("[warn]: Failed to fetch sequence in {}, skip",reg);
+                warn!("Failed to fetch sequence in {}, skip",reg);
                 continue;
             }
             // changge file pointer
@@ -106,7 +109,8 @@ pub fn index_reader(
             }
             println!();
         } else {
-            eprintln!("[warn]: Failed to parse region {}, skip",reg);
+            warn!("Failed to parse region {}, skip",reg);
+            //eprintln!("[warn]: Failed to parse region {}, skip",reg);
             continue;
         }
         

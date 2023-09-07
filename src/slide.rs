@@ -1,6 +1,8 @@
 use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
+use log::*;
+
 
 pub fn silding_window(
     step: usize,
@@ -10,9 +12,12 @@ pub fn silding_window(
     keep: bool,
 ) -> Result<(), Error> {
     if step == 0 {
-        eprintln!("[error]: step size can't be 0");
+        error!("step size can't be 0");
         std::process::exit(1);
     }
+    info!("reading from: {}", file);
+    info!("window size: {}", wind);
+    info!("step size: {}", step);
     let fp = fasta::Reader::new(file_reader(&Some(file))?);
     let mut fo = file_writer(out)?;
     let mut windows = wind;

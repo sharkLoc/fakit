@@ -1,6 +1,7 @@
 use anyhow::Error;
 use bio::io::fasta;
 use crate::utils::*;
+use log::*;
 
 #[derive(Debug)]
 struct Seqinfo {
@@ -39,8 +40,8 @@ pub fn summary_fa(
     input: Vec<String>,
     all: bool,    
 ) -> Result<(),Error> {
-    if input.len() < 1 {
-        eprintln!("usage: fakit  summ -h/--help, get more help\n");
+    if input.is_empty() {
+        error!("usage: fakit  summ -h/--help, get more help\n");
         std::process::exit(1);
     }
     if all {
@@ -79,7 +80,7 @@ pub fn summary_fa(
                     &b'C' | &b'c' => {info.count_c += 1;},
                     &b'N' | &b'n' => {info.count_n += 1;},
                     _ => { 
-                        eprintln!("[error]: error DNA base code in seq {}",rec.id());
+                        error!("Error DNA base code in seq: {}",rec.id());
                         std::process::exit(1);
                     }
                 }    

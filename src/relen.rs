@@ -1,6 +1,6 @@
 use bio::io::fasta;
 use std::io::Result;
-
+use log::*;
 use crate::utils::*;
 
 pub fn relen_fa(
@@ -8,6 +8,7 @@ pub fn relen_fa(
     length: usize, 
     output: &Option<&str>
 ) -> Result<()> {
+    info!("reading from {}",input.unwrap());
     let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output)?);
     

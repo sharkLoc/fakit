@@ -1,6 +1,6 @@
 use bio::io::fasta::{self, Record};
 use std::io::Result;
-
+use log::*;
 use crate::utils::*;
 
 
@@ -10,6 +10,7 @@ pub fn rename_fa(
     prefix: Option<String>, //&str,
     output: &Option<&str>,
 ) -> Result<()> {
+    info!("reading from {}",input.unwrap());
     let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output)?);
     let mut n: usize = 0;

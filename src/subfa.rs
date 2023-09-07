@@ -2,12 +2,19 @@ use std::io::Result;
 use bio::io::fasta;
 use rand::{prelude::*, Rng};
 use rand_pcg::Pcg64;
-
+use log::*;
 use crate::utils::*;
 
 
 // reduce much memory but cost more time
-pub fn select_fasta(file: &Option<&str>, n: usize, seed: u64, out: &Option<&str>) -> Result<()> {
+pub fn select_fasta(
+    file: &Option<&str>, 
+    n: usize, 
+    seed: u64, 
+    out: &Option<&str>
+) -> Result<()> {
+    info!("reading from: {}",file.unwrap());
+    info!("rand seed: {}",seed);
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut get: Vec<usize> = Vec::with_capacity(n);
 
@@ -37,7 +44,15 @@ pub fn select_fasta(file: &Option<&str>, n: usize, seed: u64, out: &Option<&str>
 
 
 // fast mode but cost more memory
-pub fn select_fasta2(file: &Option<&str>, n: usize, seed: u64, out: &Option<&str>) -> Result<()> {
+pub fn select_fasta2(
+    file: &Option<&str>, 
+    n: usize, 
+    seed: u64, 
+    out: &Option<&str>
+) -> Result<()> {
+    info!("reading from: {}",file.unwrap());
+    info!("rand seed: {}",seed);
+
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut get: Vec<fasta::Record> = Vec::with_capacity(n);
 

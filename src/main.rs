@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use anyhow::{Error, Ok};
+use env_logger::Env;
 
 mod top;
 use top::*;
@@ -26,10 +27,10 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.4",
+    version = "version 0.2.6",
     about = "fakit: a simple program for fasta file manipulation",
     long_about = None,
-    next_line_help = true
+    next_line_help = false
 )]
 struct Args {
     #[clap(subcommand)]
@@ -179,7 +180,7 @@ enum Subcli {
 }
 
 fn main() -> Result<(),Error> {
-
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let args = Args::parse();
 
     match args.command {

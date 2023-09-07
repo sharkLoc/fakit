@@ -21,11 +21,11 @@ pub fn file_reader(file_in: &Option<&str>) -> Result<Box<dyn BufRead>> {
 
         if flag {
             Ok(Box::new(BufReader::with_capacity(
-                1024 * 256,
+                1024 * 1024,
                 read::MultiGzDecoder::new(fp),
             )))
         } else {
-            Ok(Box::new(BufReader::with_capacity(1024 * 256, fp)))
+            Ok(Box::new(BufReader::with_capacity(1024 * 1024, fp)))
         }
     } else {
         let fp = BufReader::new(io::stdin());
@@ -38,11 +38,11 @@ pub fn file_writer(file_out: &Option<&str>) -> Result<Box<dyn Write>> {
         let fp = File::create(file_name)?;
         if file_name.ends_with(".gz") || file_name.ends_with(".gzip") {
             Ok(Box::new(BufWriter::with_capacity(
-                1024 * 256,
+                1024 * 1024,
                 write::GzEncoder::new(fp, Compression::default()),
             )))
         } else {
-            Ok(Box::new(BufWriter::with_capacity(1024 * 256, fp)))
+            Ok(Box::new(BufWriter::with_capacity(1024 * 1024, fp)))
         }
     } else {
         Ok(Box::new(BufWriter::new(io::stdout())))
