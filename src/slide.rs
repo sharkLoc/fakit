@@ -28,7 +28,7 @@ pub fn silding_window(
         loop {
             if windows < len {
                 let fa = &seq[start..windows].to_ascii_uppercase();
-                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / windows as f64;
+                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / wind as f64;
                 let fa_str = std::str::from_utf8(fa)?;
                 let out = if keep {
                     format!(">{} {}-{}:{:.4}\n{}\n", rec.id(),start+1, windows, gc, fa_str)
