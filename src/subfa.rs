@@ -1,4 +1,5 @@
 use std::io::Result;
+use std::time::Instant;
 use bio::io::fasta;
 use rand::{prelude::*, Rng};
 use rand_pcg::Pcg64;
@@ -13,8 +14,11 @@ pub fn select_fasta(
     seed: u64, 
     out: &Option<&str>
 ) -> Result<()> {
-    info!("reading from: {}",file.unwrap());
+    info!("reading from file: {}",file.unwrap());
     info!("rand seed: {}",seed);
+    info!("reduce much memory but cost more time");
+    let start = Instant::now();
+
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut get: Vec<usize> = Vec::with_capacity(n);
 
@@ -39,6 +43,8 @@ pub fn select_fasta(
             w.write(rec.id(), rec.desc(), rec.seq())?;
         }
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
 
@@ -50,8 +56,10 @@ pub fn select_fasta2(
     seed: u64, 
     out: &Option<&str>
 ) -> Result<()> {
-    info!("reading from: {}",file.unwrap());
+    info!("reading from file: {}",file.unwrap());
     info!("rand seed: {}",seed);
+    info!("fast mode but cost more memory");
+    let start = Instant::now();
 
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut get: Vec<fasta::Record> = Vec::with_capacity(n);
@@ -73,5 +81,7 @@ pub fn select_fasta2(
     for rec in get {
         w.write(rec.id(), rec.desc(), rec.seq())?;
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

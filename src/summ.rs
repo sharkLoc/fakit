@@ -2,6 +2,7 @@ use anyhow::Error;
 use bio::io::fasta;
 use crate::utils::*;
 use log::*;
+use std::time::Instant;
 
 #[derive(Debug)]
 struct Seqinfo {
@@ -41,18 +42,17 @@ pub fn summary_fa(
     all: bool,    
 ) -> Result<(),Error> {
     if input.is_empty() {
-        error!("usage: fakit  summ -h/--help, get more help\n");
+        error!("usage: fakit  summ -h/--help, get more help");
         std::process::exit(1);
     }
+    let start = Instant::now();
+
     if all {
-        /*println!("{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}",
-            "file","count_A","count_C","count_G","count_T","count_N","rate_GC","rate_N","num_seq","sum_len","min_len","mean_len","max_len"
-        );*/
         println!("file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len");
     } else {
-        //println!("{:7}\t{:7}\t{:7}\t{:7}\t{:7}\t{:7}","file","num_seq","sum_len","min_len","mean_len","max_len");
         println!("file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len");
     }
+
     for i in input {
         let mut info = Seqinfo::new(i.clone());
         let file_in = &Some(i.as_str());
@@ -60,6 +60,7 @@ pub fn summary_fa(
 
         let fp = fasta::Reader::new(file_reader(file_in)?);
         for rec in fp.records().flatten() {
+            let mut pos = 0usize;
             info.num_seq += 1;
             let seq_len = rec.seq().len();
             info.sum_len += seq_len;
@@ -73,6 +74,7 @@ pub fn summary_fa(
                 Some(seq_len)
             };
             for nt in rec.seq().iter() {
+                pos += 1;
                 match nt {
                     &b'A' | &b'a' => {info.count_a += 1;},
                     &b'T' | &b't' => {info.count_t += 1;},
@@ -80,8 +82,9 @@ pub fn summary_fa(
                     &b'C' | &b'c' => {info.count_c += 1;},
                     &b'N' | &b'n' => {info.count_n += 1;},
                     _ => { 
-                        error!("Error DNA base code in seq: {}",rec.id());
-                        std::process::exit(1);
+                        warn!("Error DNA base code in sequence {} position: {}",rec.id(), pos);
+                        continue;
+                        //std::process::exit(1);
                     }
                 }    
             }
@@ -96,6 +99,8 @@ pub fn summary_fa(
             println!("{}\t{}\t{}\t{}\t{:.0}\t{}",info.name, info.num_seq, info.sum_len, info.min_len, info.mean_len, info.max_len);
         }
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
 

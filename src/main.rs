@@ -27,10 +27,10 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.6",
+    version = "version 0.2.7",
     about = "fakit: a simple program for fasta file manipulation",
     long_about = None,
-    next_line_help = false
+    next_line_help = true
 )]
 struct Args {
     #[clap(subcommand)]

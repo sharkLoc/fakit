@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::time::Instant;
 use std::io::BufRead;
 use crate::utils::*;
 use bio::io::fasta::IndexedReader;
@@ -8,7 +9,9 @@ use log::*;
 pub fn index_fasta(
     name: &str,
 ) -> Result<(), Error> {
-    info!("crate faidx for {}",name);
+    info!("crate faidx for file: {}",name);
+    let start = Instant::now();
+
     let out = format!("{}.fai",name);
     let fp = file_reader(&Some(name))?;
     let mut fo = file_writer(&Some(&out))?;
@@ -64,6 +67,8 @@ pub fn index_fasta(
         let out = format!("{}\t{}\t{}\t{}\t{}",k,v,chr.get(k).unwrap(),lens[i].0, lens[i].1);    
         writeln!(&mut fo, "{}",out)?;
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
 
@@ -76,6 +81,8 @@ pub fn index_reader(
         index_fasta(name)?;
     }
     info!("read index file: {}",fai);
+    let start = Instant::now();
+    
     let mut faidx = IndexedReader::from_file(&name).unwrap();
     for reg in &region {
         let each_reg: Vec<&str> = reg.split(|c| c == ':' || c == '-').collect();
@@ -116,5 +123,6 @@ pub fn index_reader(
         
     }
     
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

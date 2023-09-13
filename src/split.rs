@@ -1,6 +1,7 @@
 use std::io::Result;
 use bio::io::fasta;
 use crate::utils::*;
+use std::time::Instant;
 use log::*;
 
 pub fn split_fa(
@@ -8,7 +9,9 @@ pub fn split_fa(
     ext: String,
     outdir: Option<&str>,
 ) -> Result<()> {
-    info!("reading form: {}", input);
+    info!("reading form file: {}", input);
+    let start = Instant::now();
+    
     let fp = fasta::Reader::new(file_reader(&Some(&input))?);
     for rec in fp.records().flatten() {
         let path = if let Some(outdir) = outdir { format!("{}/{}.{}",outdir,rec.id(),ext) } else {
@@ -18,5 +21,6 @@ pub fn split_fa(
         fo.write_record(&rec)?;
     }
 
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

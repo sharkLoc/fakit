@@ -1,6 +1,7 @@
 use anyhow::Error;
 use regex::Regex;
 use bio::io::fasta;
+use std::time::Instant;
 use log::*;
 use crate::utils::*;
 
@@ -11,8 +12,10 @@ pub fn search_fa(
     pat: &str,
     header: bool,
 ) -> Result<(),Error> {
-    info!("reading from {}",file);
-    info!("regex pattern {}",pat);
+    info!("reading from file: {}",file);
+    info!("regex pattern is: {}",pat);
+    let start = Instant::now();
+
     let re = Regex::new(pat)?;
     let fp = file_reader(&Some(file)).map(fasta::Reader::new)?;
     let mut fo = file_writer(out)?;
@@ -34,5 +37,7 @@ pub fn search_fa(
             }
         }
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

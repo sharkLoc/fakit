@@ -1,6 +1,7 @@
 use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
+use std::time::Instant;
 use log::*;
 
 
@@ -15,9 +16,11 @@ pub fn silding_window(
         error!("step size can't be 0");
         std::process::exit(1);
     }
-    info!("reading from: {}", file);
-    info!("window size: {}", wind);
+    info!("reading from file: {}", file);
+    info!("window size : {}", wind);
     info!("step size: {}", step);
+    let start = Instant::now();
+
     let fp = fasta::Reader::new(file_reader(&Some(file))?);
     let mut fo = file_writer(out)?;
     let mut windows = wind;
@@ -53,6 +56,7 @@ pub fn silding_window(
             }
         }
     }   
- 
+    
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

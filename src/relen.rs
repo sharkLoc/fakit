@@ -1,5 +1,6 @@
 use bio::io::fasta;
 use std::io::Result;
+use std::time::Instant;
 use log::*;
 use crate::utils::*;
 
@@ -8,7 +9,9 @@ pub fn relen_fa(
     length: usize, 
     output: &Option<&str>
 ) -> Result<()> {
-    info!("reading from {}",input.unwrap());
+    info!("reading from file: {}",input.unwrap());
+    let start = Instant::now();
+
     let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output)?);
     
@@ -41,5 +44,7 @@ pub fn relen_fa(
             }
         }
     }
+
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
