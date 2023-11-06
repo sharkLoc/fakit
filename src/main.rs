@@ -1,6 +1,10 @@
 use clap::{Parser, Subcommand};
 use anyhow::{Error, Ok};
-use env_logger::Env;
+use chrono::Local;
+use env_logger::{Builder,fmt::Color};
+use log::{LevelFilter,Level};
+use std::io::Write;
+
 
 mod top;
 use top::*;
@@ -22,15 +26,18 @@ mod summ;
 use summ::*;
 mod split;
 use split::*;
+mod codon;
+use codon::*;
 mod utils;
 
 #[derive(Parser, Debug)]
 #[command(
     author = "size_t",
-    version = "version 0.2.7",
-    about = "fakit: a simple program for fasta file manipulation",
+    version = "version 0.2.8",
+    about = None,
     long_about = None,
-    next_line_help = true
+    next_line_help = true,
+    before_help = "fakit 0.2.8\nsharkLoc <mmtinfo@163.com>\nA simple program for fasta file manipulation"
 )]
 struct Args {
     #[clap(subcommand)]
@@ -41,7 +48,7 @@ struct Args {
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 enum Subcli {
-    /// get first N records from fasta file
+    /// Get first N records from fasta file
     topn {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -52,7 +59,7 @@ enum Subcli {
         /// output fasta[.gz] file name, or write to stdout
         output: Option<String>,
     }, 
-    /// convert fasta to fastq file
+    /// Convert fasta to fastq file
     fa2fq {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -63,7 +70,7 @@ enum Subcli {
         /// output fastq file name[.gz], or write to stdout
         output: Option<String>,
     },
-    /// crate index and random access to fasta files
+    /// Create index and random access to fasta files
     faidx {
         /// input uncompressed fasta file
         #[arg(short = 'i', long = "input")]
@@ -74,7 +81,7 @@ enum Subcli {
         #[arg(verbatim_doc_comment)]
         region: Option<Vec<String>>,
     },
-    /// re-length fasta sequence 
+    /// Re-length fasta sequence 
     relen {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -86,7 +93,7 @@ enum Subcli {
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     }, 
-    /// rename sequence id in fasta file
+    /// Rename sequence id in fasta file
     rename {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -101,7 +108,7 @@ enum Subcli {
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
-    /// stat dna fasta gc content by sliding windows
+    /// Stat dna fasta gc content by sliding windows
     window {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -120,7 +127,7 @@ enum Subcli {
         #[arg(short = 'o', long = "out",verbatim_doc_comment )]
         output: Option<String>,
     },
-    /// search subsequences/motifs from fasta file
+    /// Search subsequences/motifs from fasta file
     search {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -135,7 +142,7 @@ enum Subcli {
         #[arg(short = 'o', long = "out",verbatim_doc_comment )]
         output: Option<String>,
     },
-    /// subsample sequences from big fasta file
+    /// Subsample sequences from big fasta file
     subfa {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -153,7 +160,7 @@ enum Subcli {
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
-    /// split fasta file by sequence id
+    /// Split fasta file by sequence id
     split {
         /// input fasta[.gz] file
         #[arg(short = 'i', long = "input")]
@@ -165,7 +172,7 @@ enum Subcli {
         #[arg(short = 'o', long = "outdir")]
         outdir: Option<String>,
     },
-    /// a simple summary for DNA fasta files
+    /// A simple summary for DNA fasta files
     summ {
         /// files to process, eg. *.fasta
         /// usage:
@@ -176,11 +183,49 @@ enum Subcli {
         /// if specified, show more information
         #[arg(short='a', long="all")]
         all: bool,
+    },
+    /// Show codon table and amino acid name
+    codon {
+        /// Amino acid short name eg. S
+        #[arg(short='n', long="name")]
+        name: Option<String>,
     }
 }
 
 fn main() -> Result<(),Error> {
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
+    let mut builder = Builder::from_default_env();
+
+    builder.format(|buf, record| {
+        let mut style = buf.style();
+        match record.level() {
+            Level::Error => {
+                style.set_color(Color::Red).set_bold(true);
+            }
+            Level::Warn => {
+                style.set_color(Color::Yellow).set_bold(true);
+            }
+            Level::Info => {
+                style.set_color(Color::Green).set_bold(true);
+            }
+            Level::Debug => {
+                style.set_color(Color::Blue).set_bold(true);
+            }
+            Level::Trace => {
+                style.set_color(Color::Magenta).set_bold(true);
+            }
+        }
+        writeln!(buf,
+            "[{} {} - {}] {}",
+            Local::now().format("%Y-%m-%dT%H:%M:%S"),
+            style.value(record.level()),
+            buf.style().set_color(Color::Rgb(90, 150, 150)).value(record.target()),
+            record.args()
+        )
+    })
+    .filter(None, LevelFilter::Info)
+    .init();
+
     let args = Args::parse();
 
     match args.command {
@@ -258,6 +303,9 @@ fn main() -> Result<(),Error> {
             } else {
                 split_fa(input, ext, None)?;
             }
+        }
+        Subcli::codon { name } => {
+            show_codon(name)?;
         }
     }
 
