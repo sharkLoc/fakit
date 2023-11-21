@@ -8,9 +8,16 @@ use log::*;
 pub fn fake_quality(
     name: &Option<&str>, 
     qual: char,
-    out: &Option<&str>,    
+    out: &Option<&str>,
+    quiet: bool,    
 ) -> Result<()> {
-    info!("reading from file: {}",name.unwrap());
+    if !quiet {
+        if let Some(file) = name {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+    }
     let start = Instant::now();
     
     let fp = fasta::Reader::new(file_reader(name)?);
@@ -20,7 +27,11 @@ pub fn fake_quality(
         let rec_qual = qual.to_string().repeat(rec.seq().len());
         w.write(rec.id(), rec.desc(), rec.seq(), rec_qual.as_bytes())?;
     }
+    w.flush()?;
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
+
     Ok(())
 }

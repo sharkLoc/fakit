@@ -10,8 +10,15 @@ pub fn rename_fa(
     keep: bool,
     prefix: Option<String>, //&str,
     output: &Option<&str>,
+    quiet: bool,
 ) -> Result<()> {
-    info!("reading from file: {}",input.unwrap());
+    if !quiet {
+        if let Some(file) = input {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+    }
     let start = Instant::now();
 
     let fp = fasta::Reader::new(file_reader(input)?);
@@ -29,6 +36,7 @@ pub fn rename_fa(
             };
             fo.write_record(&record)?;
         }
+        fo.flush()?;
     } else {
         for rec in fp.records().flatten() {
             n += 1;
@@ -39,8 +47,11 @@ pub fn rename_fa(
             };
             fo.write_record(&record)?;
         }
+        fo.flush()?;
     }
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
     Ok(())
 }

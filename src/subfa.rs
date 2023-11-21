@@ -12,11 +12,18 @@ pub fn select_fasta(
     file: &Option<&str>, 
     n: usize, 
     seed: u64, 
-    out: &Option<&str>
+    out: &Option<&str>,
+    quiet: bool,
 ) -> Result<()> {
-    info!("reading from file: {}",file.unwrap());
-    info!("rand seed: {}",seed);
-    info!("reduce much memory but cost more time");
+    if !quiet {
+        if let Some(file) = file {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+        info!("rand seed: {}",seed);
+        info!("reduce much memory but cost more time");
+    }
     let start = Instant::now();
 
     let mut rng = Pcg64::seed_from_u64(seed);
@@ -43,8 +50,11 @@ pub fn select_fasta(
             w.write(rec.id(), rec.desc(), rec.seq())?;
         }
     }
-
-    info!("time elapsed is: {:?}",start.elapsed());
+    w.flush()?;
+    
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
     Ok(())
 }
 
@@ -54,11 +64,18 @@ pub fn select_fasta2(
     file: &Option<&str>, 
     n: usize, 
     seed: u64, 
-    out: &Option<&str>
+    out: &Option<&str>,
+    quiet: bool,
 ) -> Result<()> {
-    info!("reading from file: {}",file.unwrap());
-    info!("rand seed: {}",seed);
-    info!("fast mode but cost more memory");
+    if !quiet {
+        if let Some(file) = file {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+        info!("rand seed: {}",seed);
+        info!("fast mode but cost more memory");
+    }
     let start = Instant::now();
 
     let mut rng = Pcg64::seed_from_u64(seed);
@@ -81,7 +98,10 @@ pub fn select_fasta2(
     for rec in get {
         w.write(rec.id(), rec.desc(), rec.seq())?;
     }
+    w.flush()?;
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
     Ok(())
 }

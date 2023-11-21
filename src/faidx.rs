@@ -7,13 +7,18 @@ use anyhow::Error;
 use log::*;
 
 pub fn index_fasta(
-    name: &str,
+    name: &Option<&str>,
+    quiet: bool,
 ) -> Result<(), Error> {
-    info!("crate faidx for file: {}",name);
+    if !quiet {
+        if let Some(name) = name {
+            info!("crate faidx for file: {}",name);
+        }
+    }
     let start = Instant::now();
 
-    let out = format!("{}.fai",name);
-    let fp = file_reader(&Some(name))?;
+    let out = format!("{}.fai",name.unwrap());
+    let fp = file_reader(name)?;
     let mut fo = file_writer(&Some(&out))?;
 
     let mut dat = BTreeMap::new(); // base count
@@ -65,22 +70,30 @@ pub fn index_fasta(
 
     for (i,(k,v)) in dat.iter().enumerate() {
         let out = format!("{}\t{}\t{}\t{}\t{}",k,v,chr.get(k).unwrap(),lens[i].0, lens[i].1);    
-        writeln!(&mut fo, "{}",out)?;
+        //writeln!(&mut fo, "{}", out)?;
+        fo.write(out.as_bytes())?;
+    }
+    fo.flush()?;
+
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
     }
 
-    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
 
 pub fn index_reader(
     name: &str,
     region: Vec<String>,
+    quiet: bool,
 ) -> Result<(),Error> {
     let fai = format!("{}.fai",name);
     if !std::path::Path::new(&fai).exists() {
-        index_fasta(name)?;
+        index_fasta(&Some(name), quiet)?;
     }
-    info!("read index file: {}",fai);
+    if !quiet {
+        info!("read index file: {}",fai);
+    }
     let start = Instant::now();
     
     let mut faidx = IndexedReader::from_file(&name).unwrap();
@@ -117,12 +130,14 @@ pub fn index_reader(
             println!();
         } else {
             warn!("Failed to parse region {}, skip",reg);
-            //eprintln!("[warn]: Failed to parse region {}, skip",reg);
             continue;
         }
         
     }
     
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
+
     Ok(())
 }

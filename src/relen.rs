@@ -7,9 +7,16 @@ use crate::utils::*;
 pub fn relen_fa(
     input: &Option<&str>, 
     length: usize, 
-    output: &Option<&str>
+    output: &Option<&str>,
+    quiet: bool,
 ) -> Result<()> {
-    info!("reading from file: {}",input.unwrap());
+    if !quiet {
+        if let Some(file) = input {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+    }
     let start = Instant::now();
 
     let fp = fasta::Reader::new(file_reader(input)?);
@@ -19,6 +26,7 @@ pub fn relen_fa(
         for rec in fp.records().flatten() {
             fo.write_record(&rec)?;
         }
+        fo.flush()?;
     } else {
         let mut fo = file_writer(output)?;
         for rec in fp.records().flatten() {
@@ -45,6 +53,9 @@ pub fn relen_fa(
         }
     }
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
+
     Ok(())
 }

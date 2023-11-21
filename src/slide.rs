@@ -8,20 +8,27 @@ use log::*;
 pub fn silding_window(
     step: usize,
     wind: usize,
-    file: &str,
+    file: &Option<&str>,
     out: &Option<&str>,
     keep: bool,
+    quiet: bool,
 ) -> Result<(), Error> {
     if step == 0 {
         error!("step size can't be 0");
         std::process::exit(1);
     }
-    info!("reading from file: {}", file);
-    info!("window size : {}", wind);
-    info!("step size: {}", step);
+    if !quiet {
+        if let Some(file) = file {
+            info!("reading from file: {}", file);
+        } else {
+            info!("reading from stdin");
+        }
+        info!("window size : {}", wind);
+        info!("step size: {}", step);
+    }
     let start = Instant::now();
 
-    let fp = fasta::Reader::new(file_reader(&Some(file))?);
+    let fp = fasta::Reader::new(file_reader(file)?);
     let mut fo = file_writer(out)?;
     let mut windows = wind;
     for rec in fp.records().flatten() {
@@ -55,8 +62,11 @@ pub fn silding_window(
                 break;
             }
         }
-    }   
+    } 
+    fo.flush()?;  
     
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
     Ok(())
 }

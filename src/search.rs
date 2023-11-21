@@ -7,17 +7,25 @@ use crate::utils::*;
 
 
 pub fn search_fa(
-    file: &str,
+    file: &Option<&str>,
     out: &Option<&str>,
     pat: &str,
     header: bool,
+    quiet: bool,
 ) -> Result<(),Error> {
-    info!("reading from file: {}",file);
-    info!("regex pattern is: {}",pat);
+    if !quiet {
+        if let Some(file) = file {
+            info!("reading from file: {}",file);
+        } else {
+            info!("reading from stdin");
+        }
+        info!("regex pattern is: {}",pat);
+    }
+    
     let start = Instant::now();
 
     let re = Regex::new(pat)?;
-    let fp = file_reader(&Some(file)).map(fasta::Reader::new)?;
+    let fp = file_reader(file).map(fasta::Reader::new)?;
     let mut fo = file_writer(out)?;
     if header {
         fo.write("sequence_name\tstart\tend\tpattern\tlength\tsequence\n".as_bytes())?;
@@ -38,6 +46,8 @@ pub fn search_fa(
         }
     }
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    if !quiet {
+        info!("time elapsed is: {:?}",start.elapsed());
+    }
     Ok(())
 }
