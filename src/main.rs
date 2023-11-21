@@ -1,9 +1,10 @@
+use std::io::Write;
 use clap::{Parser, Subcommand};
 use anyhow::{Error, Ok};
 use chrono::Local;
 use env_logger::{Builder,fmt::Color};
 use log::{LevelFilter,Level, error};
-use std::io::Write;
+
 
 
 mod top;

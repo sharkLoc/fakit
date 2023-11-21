@@ -7,7 +7,6 @@
 cargo install fakit
 
 # or 
-
 git clone https://github.com/sharkLoc/fakit.git
 cd fakit
 cargo b --release
