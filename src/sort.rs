@@ -88,14 +88,14 @@ pub fn sort_fasta(
         info!("sort read by gc content");
         if reverse {
             vec_reads.sort_by(|a,b| {
-                let r1_gc = a.seq().iter().filter(|x| x == &&b'G' || x == &&b'C').count() as f64 / a.seq().len() as f64;
-                let r2_gc = b.seq().iter().filter(|x| x == &&b'G' || x == &&b'C').count() as f64 / b.seq().len() as f64;
+                let r1_gc = a.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / a.seq().len() as f64;
+                let r2_gc = b.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / b.seq().len() as f64;
                 r2_gc.partial_cmp(&r1_gc).unwrap()
             });
         } else {
             vec_reads.sort_by(|a,b| {
-                let r1_gc = a.seq().iter().filter(|x| x == &&b'G' || x == &&b'C').count() as f64 / a.seq().len() as f64;
-                let r2_gc = b.seq().iter().filter(|x| x == &&b'G' || x == &&b'C').count() as f64 / b.seq().len() as f64;
+                let r1_gc = a.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / a.seq().len() as f64;
+                let r2_gc = b.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / b.seq().len() as f64;
                 r1_gc.partial_cmp(&r2_gc).unwrap()
             });
         }
