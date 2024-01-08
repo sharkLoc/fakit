@@ -10,19 +10,17 @@ pub fn rename_fa(
     keep: bool,
     prefix: Option<String>, //&str,
     output: &Option<&str>,
-    quiet: bool,
+    compression_level: u32,
 ) -> Result<()> {
-    if !quiet {
-        if let Some(file) = input {
-            info!("reading from file: {}",file);
-        } else {
-            info!("reading from stdin");
-        }
-    }
     let start = Instant::now();
+    if let Some(file) = input {
+        info!("reading from file: {}",file);
+    } else {
+        info!("reading from stdin");
+    }
 
     let fp = fasta::Reader::new(file_reader(input)?);
-    let mut fo = fasta::Writer::new(file_writer(output)?);
+    let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
     let mut n: usize = 0;
 
     if let Some(pre) = prefix {
@@ -50,8 +48,6 @@ pub fn rename_fa(
         fo.flush()?;
     }
 
-    if !quiet {
-        info!("time elapsed is: {:?}",start.elapsed());
-    }
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

@@ -40,7 +40,6 @@ impl Seqinfo {
 pub fn summary_fa(
     input: Vec<String>,
     all: bool,
-    quiet: bool,   
 ) -> Result<(),Error> {
     if input.is_empty() {
         error!("usage: fakit  summ -h/--help, get more help");
@@ -101,9 +100,7 @@ pub fn summary_fa(
         }
     }
 
-    if !quiet {
-        info!("time elapsed is: {:?}",start.elapsed());
-    }
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
 

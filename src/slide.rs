@@ -11,25 +11,23 @@ pub fn silding_window(
     file: &Option<&str>,
     out: &Option<&str>,
     keep: bool,
-    quiet: bool,
+    compression_level: u32,
 ) -> Result<(), Error> {
     if step == 0 {
         error!("step size can't be 0");
         std::process::exit(1);
     }
-    if !quiet {
-        if let Some(file) = file {
-            info!("reading from file: {}", file);
-        } else {
-            info!("reading from stdin");
-        }
-        info!("window size : {}", wind);
-        info!("step size: {}", step);
-    }
     let start = Instant::now();
+    if let Some(file) = file {
+        info!("reading from file: {}", file);
+    } else {
+        info!("reading from stdin");
+    }
+    info!("window size : {}", wind);
+    info!("step size: {}", step);
 
     let fp = fasta::Reader::new(file_reader(file)?);
-    let mut fo = file_writer(out)?;
+    let mut fo = file_writer(out, compression_level)?;
     let mut windows = wind;
     for rec in fp.records().flatten() {
         let seq = rec.seq();
@@ -65,8 +63,6 @@ pub fn silding_window(
     } 
     fo.flush()?;  
     
-    if !quiet {
-        info!("time elapsed is: {:?}",start.elapsed());
-    }
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

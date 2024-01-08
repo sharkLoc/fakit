@@ -1,7 +1,8 @@
-use std::io::Result;
-use std::time::Instant;
-use bio::io::fasta;
-use bio::io::fastq;
+use std::{
+    time::Instant,
+    io::Result
+};
+use bio::io::{fastq,fasta};
 use crate::utils::*;
 use log::*;
 
@@ -9,19 +10,17 @@ pub fn fake_quality(
     name: &Option<&str>, 
     qual: char,
     out: &Option<&str>,
-    quiet: bool,    
+    compression_level: u32,
 ) -> Result<()> {
-    if !quiet {
-        if let Some(file) = name {
-            info!("reading from file: {}",file);
-        } else {
-            info!("reading from stdin");
-        }
-    }
     let start = Instant::now();
+    if let Some(file) = name {
+        info!("reading from file: {}",file);
+    } else {
+        info!("reading from stdin");
+    }
     
     let fp = fasta::Reader::new(file_reader(name)?);
-    let fo = file_writer(out)?;
+    let fo = file_writer(out,compression_level)?;
     let mut w = fastq::Writer::new(fo);
     for rec in fp.records().flatten() {
         let rec_qual = qual.to_string().repeat(rec.seq().len());
@@ -29,9 +28,6 @@ pub fn fake_quality(
     }
     w.flush()?;
 
-    if !quiet {
-        info!("time elapsed is: {:?}",start.elapsed());
-    }
-
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }

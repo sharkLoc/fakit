@@ -11,22 +11,19 @@ pub fn search_fa(
     out: &Option<&str>,
     pat: &str,
     header: bool,
-    quiet: bool,
-) -> Result<(),Error> {
-    if !quiet {
-        if let Some(file) = file {
-            info!("reading from file: {}",file);
-        } else {
-            info!("reading from stdin");
-        }
-        info!("regex pattern is: {}",pat);
-    }
-    
+    compression_level: u32,
+) -> Result<(),Error> {    
     let start = Instant::now();
+    if let Some(file) = file {
+        info!("reading from file: {}",file);
+    } else {
+        info!("reading from stdin");
+    }
+    info!("regex pattern is: {}",pat);
 
     let re = Regex::new(pat)?;
     let fp = file_reader(file).map(fasta::Reader::new)?;
-    let mut fo = file_writer(out)?;
+    let mut fo = file_writer(out, compression_level)?;
     if header {
         fo.write("sequence_name\tstart\tend\tpattern\tlength\tsequence\n".as_bytes())?;
     }
@@ -45,9 +42,8 @@ pub fn search_fa(
             }
         }
     }
-
-    if !quiet {
-        info!("time elapsed is: {:?}",start.elapsed());
-    }
+    fo.flush()?;
+    
+    info!("time elapsed is: {:?}",start.elapsed());
     Ok(())
 }
