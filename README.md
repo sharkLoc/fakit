@@ -1,16 +1,16 @@
 # fakit
 🦀 a simple program for fasta file manipulation 
 
+## install latest version
+
+```bash
+cargo install --git https://github.com/sharkLoc/fakit.git
+```
+
 ## install
 
 ```bash
 cargo install fakit
-
-# or 
-git clone https://github.com/sharkLoc/fakit.git
-cd fakit
-cargo b --release
-# mv target/release/fakit to anywhere you want 
 ```
 
 
