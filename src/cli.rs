@@ -3,13 +3,14 @@ use clap::{Parser,value_parser};
 #[derive(Parser, Debug)]
 #[command(
     author = "sharkLoc",
-    version = "0.2.10",
+    version = "0.2.11",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
     before_help = None,
     help_template = "{name}: {about}\n\nVersion: {version}\
-    \nAuthors: {author} <mmtinfo@163.com>\
+    \n\nAuthors: {author} <mmtinfo@163.com>\
+    \nSource code: https://github.com/sharkLoc/fakit.git\
     \n\n{usage-heading} {usage}\n\n{all-args}\n"
 )]
 pub struct Args {
@@ -149,6 +150,17 @@ pub enum Subcli {
         ///header format: seqid    start   end gc_rate sequence
         #[arg(short = 'o', long = "out",verbatim_doc_comment )]
         output: Option<String>,
+    },
+    /// Convert all bases to lower/upper case
+    seq {
+        /// input fasta[.gz] file, or read from stdin
+        input: Option<String>,
+        /// if specified, convert all bases to lowercase
+        #[arg(short = 'l', long = "lower")]
+        lower: bool,
+        /// output file name or write to stdout, file ending in .gz will be compressed automatically
+        #[arg(short = 'o', long = "out")]
+        out: Option<String>,
     },
     /// Sort fasta file by name/seq/gc/length
     #[command(before_help = "note: all records will be readed into memory")]

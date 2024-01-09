@@ -16,6 +16,8 @@ mod reverse;
 use reverse::*;
 mod sort;
 use sort::*;
+mod seq;
+use seq::*;
 mod top;
 use top::*;
 mod fa2fq;
@@ -179,6 +181,21 @@ fn main() -> Result<(), Error> {
                     silding_window(step, wind, &None, &Some(&output), keep, args.compression_level)?;
                 } else {
                     silding_window(step, wind, &None, &None, keep, args.compression_level)?;
+                }
+            }
+        }
+        Subcli::seq { input, lower, out } => {
+            if let Some(input) = input {
+                if let Some(out) = out {
+                    seq_fa(&Some(&input), lower, &Some(&out), args.compression_level)?;
+                } else {
+                    seq_fa(&Some(&input), lower, &None, args.compression_level)?;
+                }
+            } else {
+                if let Some(out) = out {
+                    seq_fa(&None, lower, &Some(&out), args.compression_level)?;
+                } else {
+                    seq_fa(&None, lower, &None, args.compression_level)?;
                 }
             }
         }
