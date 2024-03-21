@@ -63,10 +63,10 @@ pub enum Subcli {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// print first N fasta records
-        #[arg(short = 'n', long = "num", default_value_t = 10)]
+        #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
         num: usize,
         /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
     /// convert fasta to fastq file
@@ -74,10 +74,10 @@ pub enum Subcli {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// fasta to fastq and generate fake fastq quality.
-        #[arg(short = 'Q', long = "qual", default_value_t = 'F')]
+        #[arg(short = 'Q', long = "qual", default_value_t = 'F', value_name = "char")]
         qual: char,
         /// output fastq file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
     /// create index and random access to fasta files
@@ -99,7 +99,7 @@ pub enum Subcli {
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool,
         /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
     /// print fasta records in a range
@@ -107,13 +107,13 @@ pub enum Subcli {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// skip first int fasta records
-        #[arg(short = 's', long = "skip", default_value_t = 0)]
+        #[arg(short = 's', long = "skip", default_value_t = 0, value_name = "int")]
         skip: usize,
         /// take int fasta records
-        #[arg(short = 't', long = "take")]
+        #[arg(short = 't', long = "take", value_name = "int")]
         take: usize,
         /// fasta output file name or write to stdout, files ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
 
     },
