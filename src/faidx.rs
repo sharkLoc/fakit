@@ -8,6 +8,7 @@ use bio::io::fasta::IndexedReader;
 use anyhow::{Error,Ok};
 use log::*;
 
+
 pub fn index_fasta(
     name: &Option<&str>,
     compression_level: u32,

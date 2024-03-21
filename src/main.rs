@@ -6,38 +6,37 @@ mod cli;
 use cli::*;
 mod logger;
 use logger::*;
-mod flatten;
-use flatten::*;
-mod shuffle;
-use shuffle::*;
-mod range;
-use range::*;
-mod reverse;
-use reverse::*;
-mod sort;
-use sort::*;
-mod seq;
-use seq::*;
 mod top;
 use top::*;
 mod fa2fq;
 use fa2fq::*;
 mod faidx;
 use faidx::*;
-mod relen;
-use relen::*;
+mod flatten;
+use flatten::*;
+mod range;
+use range::*;
 mod rename;
 use rename::*;
+mod reverse;
+use reverse::*;
 mod search;
 use search::*;
+mod seq;
+use seq::*;
+mod shuffle;
+use shuffle::*;
 mod slide;
 use slide::*;
+mod sort;
+use sort::*;
+mod split;
+use split::*;
 mod subfa;
 use subfa::*;
 mod summ;
 use summ::*;
-mod split;
-use split::*;
+mod wrap;
 mod codon;
 use codon::*;
 mod utils;
@@ -55,15 +54,15 @@ fn main() -> Result<(), Error> {
         Subcli::topn { input, num, output } => {
             if let Some(input) = input {
                 if let Some(output) = output {
-                    top_n_records(num, &Some(&input), &Some(&output), args.compression_level)?;
+                    top_n_records(num, &Some(&input), &Some(&output), args.width, args.compression_level)?;
                 } else {
-                    top_n_records(num, &Some(&input), &None, args.compression_level)?;
+                    top_n_records(num, &Some(&input), &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(output) = output {
-                    top_n_records(num, &None, &Some(&output), args.compression_level)?;
+                    top_n_records(num, &None, &Some(&output), args.width, args.compression_level)?;
                 } else {
-                    top_n_records(num, &None, &None, args.compression_level)?;
+                    top_n_records(num, &None, &None, args.width, args.compression_level)?;
                 }
             } 
         }
@@ -94,78 +93,63 @@ fn main() -> Result<(), Error> {
                 std::process::exit(1);
             }
         }
-        Subcli::flatten { input, output } => {
+        Subcli::flatten { input,keep, output } => {
             if let Some(input) = input {
                 if let Some(output) = output {
-                    flatten_fa(&Some(&input), &Some(&output), args.compression_level)?;
+                    flatten_fa(&Some(&input), &Some(&output), keep, args.compression_level)?;
                 } else {
-                    flatten_fa(&Some(&input), &None, args.compression_level)?;
+                    flatten_fa(&Some(&input), &None, keep, args.compression_level)?;
                 }
             } else {
                 if let Some(output) = output {
-                    flatten_fa(&None, &Some(&output), args.compression_level)?;
+                    flatten_fa(&None, &Some(&output), keep, args.compression_level)?;
                 } else {
-                    flatten_fa(&None, &None, args.compression_level)?;
+                    flatten_fa(&None, &None, keep, args.compression_level)?;
                 }
             }
         }
         Subcli::range { input, skip, take, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    range_fasta(&Some(&input), skip, take, &Some(&out), args.compression_level)?;
+                    range_fasta(&Some(&input), skip, take, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    range_fasta(&Some(&input), skip, take, &None, args.compression_level)?;
+                    range_fasta(&Some(&input), skip, take, &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(out) = out {
-                    range_fasta(&None, skip, take, &Some(&out), args.compression_level)?;
+                    range_fasta(&None, skip, take, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    range_fasta(&None, skip, take, &None, args.compression_level)?;
+                    range_fasta(&None, skip, take, &None, args.width, args.compression_level)?;
                 }
             }  
-        }
-        Subcli::relen { input, len, output } => {
-            if let Some(input) = input {
-                if let Some(output) = output {
-                    relen_fa(&Some(&input), len, &Some(&output),args.compression_level)?;
-                } else {
-                    relen_fa(&Some(&input), len, &None, args.compression_level)?;
-                }
-            } else {
-                if let Some(output) = output {
-                    relen_fa(&None, len, &Some(&output),args.compression_level)?;
-                } else {
-                    relen_fa(&None, len, &None, args.compression_level)?;
-                }
-            }
         }
         Subcli::rename { input, keep, prefix, output} => {
             if let Some(input) =input {
                 if let Some(output) = output {
-                    rename_fa(&Some(&input), keep, prefix, &Some(&output), args.compression_level)?;
+                    rename_fa(&Some(&input), keep, prefix, &Some(&output), args.width, args.compression_level)?;
                 } else {
-                    rename_fa(&Some(&input), keep, prefix, &None, args.compression_level)?;
+                    rename_fa(&Some(&input), keep, prefix, &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(output) = output {
-                    rename_fa(&None, keep, prefix, &Some(&output), args.compression_level)?;
+                    rename_fa(&None, keep, prefix, &Some(&output), args.width, args.compression_level)?;
                 } else {
-                    rename_fa(&None, keep, prefix, &None, args.compression_level)?;
+                    rename_fa(&None, keep, prefix, &None, args.width, args.compression_level)?;
                 }
             }
         }
         Subcli::reverse { input, rev, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    reverse_comp_seq(&Some(&input), &Some(&out), rev, args.compression_level)?;
+                    reverse_comp_seq(&Some(&input), &Some(&out), rev, args.width, args.compression_level)?;
                 } else {
-                    reverse_comp_seq(&Some(&input), &None, rev, args.compression_level)?;
+                    reverse_comp_seq(&Some(&input), &None, rev, args.width, args.compression_level)?;
                 }   
             } else {
                 if let Some(out) = out {
-                    reverse_comp_seq(&None, &Some(&out), rev, args.compression_level)?;
+                    reverse_comp_seq(&None, &Some(&out), rev, args.width, args.compression_level)?;
                 } else {
-                    reverse_comp_seq(&None, &None, rev, args.compression_level)?;
+                    reverse_comp_seq(&None, &None, rev, args.width, args.compression_level)?;
                 }
             }
         }
@@ -183,52 +167,52 @@ fn main() -> Result<(), Error> {
                     silding_window(step, wind, &None, &None, keep, args.compression_level)?;
                 }
             }
-        }
-        Subcli::seq { input, lower, out } => {
+        } 
+        Subcli::seq { input, lower, upper, min, max, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    seq_fa(&Some(&input), lower, &Some(&out), args.compression_level)?;
+                    seq_fa(&Some(&input), lower, upper, min, max, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    seq_fa(&Some(&input), lower, &None, args.compression_level)?;
+                    seq_fa(&Some(&input), lower, upper, min, max, &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(out) = out {
-                    seq_fa(&None, lower, &Some(&out), args.compression_level)?;
+                    seq_fa(&None, lower, upper, min, max, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    seq_fa(&None, lower, &None, args.compression_level)?;
+                    seq_fa(&None, lower, upper, min, max, &None, args.width, args.compression_level)?;
                 }
             }
-        }
+        } 
         Subcli::sort { input, name, seq, gc, length, reverse, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    sort_fasta(&Some(&input), name, seq, gc, length, reverse, &Some(&out), args.compression_level)?;
+                    sort_fasta(&Some(&input), name, seq, gc, length, reverse, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    sort_fasta(&Some(&input), name, seq, gc, length, reverse, &None, args.compression_level)?;
+                    sort_fasta(&Some(&input), name, seq, gc, length, reverse, &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(out) = out {
-                    sort_fasta(&None, name, seq, gc, length, reverse, &Some(&out), args.compression_level)?;
+                    sort_fasta(&None, name, seq, gc, length, reverse, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    sort_fasta(&None, name, seq, gc, length, reverse, &None, args.compression_level)?;
+                    sort_fasta(&None, name, seq, gc, length, reverse, &None, args.width, args.compression_level)?;
                 }
             }
         }
         Subcli::shuffle { input, seed, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    shuffle_fasta(&Some(&input), seed, &Some(&out), args.compression_level)?;
+                    shuffle_fasta(&Some(&input), seed, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    shuffle_fasta(&Some(&input), seed, &None, args.compression_level)?;
+                    shuffle_fasta(&Some(&input), seed, &None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(out) = out {
-                    shuffle_fasta(&None, seed, &Some(&out), args.compression_level)?;
+                    shuffle_fasta(&None, seed, &Some(&out), args.width, args.compression_level)?;
                 } else {
-                    shuffle_fasta(&None, seed, &None, args.compression_level)?;
+                    shuffle_fasta(&None, seed, &None, args.width, args.compression_level)?;
                 }
             }
-        }
+        } 
         Subcli::search { input, pat, Header, output } => {
             if let Some(input) = input {
                 if let Some(output) = output {
@@ -248,29 +232,29 @@ fn main() -> Result<(), Error> {
             if rdc {
                 if let Some( input) = input {
                     if let Some(out) = output {
-                        select_fasta(&Some(&input), num, seed, &Some(&out), args.compression_level)?;
+                        select_fasta(&Some(&input), num, seed, &Some(&out), args.width, args.compression_level)?;
                     } else {
-                        select_fasta(&Some(&input), num, seed, &None, args.compression_level)?;
+                        select_fasta(&Some(&input), num, seed, &None, args.width, args.compression_level)?;
                     }
                 } else {
                     if let Some(out) = output {
-                        select_fasta(&None, num, seed, &Some(&out), args.compression_level)?;
+                        select_fasta(&None, num, seed, &Some(&out), args.width, args.compression_level)?;
                     } else {
-                        select_fasta(&None, num, seed, &None, args.compression_level)?;
+                        select_fasta(&None, num, seed, &None, args.width, args.compression_level)?;
                     }
                 }
             } else {
                 if let Some(input) = input {
                     if let Some(out) = output {
-                        select_fasta2(&Some(&input), num, seed, &Some(&out), args.compression_level)?;
+                        select_fasta2(&Some(&input), num, seed, &Some(&out), args.width, args.compression_level)?;
                     } else {
-                        select_fasta2(&Some(&input), num, seed, &None, args.compression_level)?;
+                        select_fasta2(&Some(&input), num, seed, &None, args.width, args.compression_level)?;
                     }
                 } else {
                     if let Some(out) = output {
-                        select_fasta2(&None, num, seed, &Some(&out), args.compression_level)?;
+                        select_fasta2(&None, num, seed, &Some(&out), args.width, args.compression_level)?;
                     } else {
-                        select_fasta2(&None, num, seed, &None, args.compression_level)?;
+                        select_fasta2(&None, num, seed, &None, args.width, args.compression_level)?;
                     }
                 }
             }
@@ -281,15 +265,15 @@ fn main() -> Result<(), Error> {
         Subcli::split { input, ext, outdir } => {
             if let Some(input) = input {
                 if let Some(outdir) = outdir {
-                    split_fa(&Some(&input), ext, Some(&outdir), args.compression_level)?;
+                    split_fa(&Some(&input), ext, Some(&outdir), args.width, args.compression_level)?;
                 } else {
-                    split_fa(&Some(&input), ext, None, args.compression_level)?;
+                    split_fa(&Some(&input), ext, None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(outdir) = outdir {
-                    split_fa(&None, ext, Some(&outdir), args.compression_level)?;
+                    split_fa(&None, ext, Some(&outdir), args.width, args.compression_level)?;
                 } else {
-                    split_fa(&None, ext, None, args.compression_level)?;
+                    split_fa(&None, ext, None, args.width, args.compression_level)?;
                 }
             }
         }

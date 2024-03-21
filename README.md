@@ -17,33 +17,43 @@ cargo install fakit
 ## usage
 
 ```bash
-fakit: A simple program for fasta file manipulation
+Fakit: A simple program for fasta file manipulation
 
-Version: 0.2.11
+Version: 0.3.0
 
 Authors: sharkLoc <mmtinfo@163.com>
 Source code: https://github.com/sharkLoc/fakit.git
 
+Fakit supports reading and writing gzip (.gz) format.
+Bzip2 (.bz2) and xz (.xz) format is supported since v0.3.0.
+Under the same compression level, xz has the highest compression ratio but consumes more time.
+
+Compression level:
+  format   range   default   crate
+  gzip     1-9     6         https://crates.io/crates/flate2
+  bzip2    1-9     6         https://crates.io/crates/bzip2
+  xz       1-9     6         https://crates.io/crates/xz2
+
+
 Usage: fakit [OPTIONS] <COMMAND>
 
 Commands:
-  topn     Get first N records from fasta file
-  fa2fq    Convert fasta to fastq file
-  faidx    Create index and random access to fasta files [aliases: fai]
-  flatten  Strip of white spaces in fasta sequences
-  range    Print fasta records in a range
-  relen    Re-length fasta sequence
-  rename   Rename sequence id in fasta file
-  reverse  Get a reverse-complement of fasta file [aliases: rev]
-  window   Stat dna fasta gc content by sliding windows
-  seq      Convert all bases to lower/upper case
-  sort     Sort fasta file by name/seq/gc/length
-  search   Search subsequences/motifs from fasta file
-  shuffle  Shuffle fasta sequences
-  subfa    Subsample sequences from big fasta file
-  split    Split fasta file by sequence id
-  summ     A simple summary for DNA fasta files
-  codon    Show codon table and amino acid name
+  topn     get first N records from fasta file [aliases: head]
+  fa2fq    convert fasta to fastq file
+  faidx    create index and random access to fasta files [aliases: fai]
+  flatten  flatten fasta sequences [aliases: flat]
+  range    print fasta records in a range
+  rename   rename sequence id in fasta file
+  reverse  get a reverse-complement of fasta file [aliases: rev]
+  window   stat dna fasta gc content by sliding windows [aliases: slide]
+  seq      convert all bases to lower/upper case
+  sort     sort fasta file by name/seq/gc/length
+  search   search subsequences/motifs from fasta file
+  shuffle  shuffle fasta sequences
+  subfa    subsample sequences from big fasta file
+  split    split fasta file by sequence id
+  summ     simple summary for dna fasta files [aliases: stat]
+  codon    show codon table and amino acid name
   help     Print this message or the help of the given subcommand(s)
 
 Options:
@@ -51,12 +61,15 @@ Options:
   -V, --version  Print version
 
 Global Arguments:
-      --compress-level <int>  set gzip compression level 1 (compress faster) - 9 (compress better) for gzip output file, just work with option -o/--out [default: 6]
+  -w, --line-width <int>      line width when outputting fasta sequences, 0 for no wrap [default: 70]
+      --compress-level <int>  set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file, just work with option -o/--out [default: 6]
       --log <str>             if file name specified, write log message to this file, or write to stderr
   -v, --verbosity <str>       control verbosity of logging, possible values: {error, warn, info, debug, trace} [default: debug]
 
 Global FLAGS:
   -q, --quiet  be quiet and do not show extra information
+
+Use "fakit help [command]" for more information about a command
 ```
 
 <br>

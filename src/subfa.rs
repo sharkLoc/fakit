@@ -1,10 +1,11 @@
-use std::io::Result;
+use anyhow::Result;
 use std::time::Instant;
 use bio::io::fasta;
 use rand::{prelude::*, Rng};
 use rand_pcg::Pcg64;
 use log::*;
 use crate::utils::*;
+use crate::wrap::*;
 
 
 // reduce much memory but cost more time
@@ -13,6 +14,7 @@ pub fn select_fasta(
     n: usize, 
     seed: u64, 
     out: &Option<&str>,
+    line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
@@ -44,7 +46,8 @@ pub fn select_fasta(
     let fa_reader2 = fasta::Reader::new(file_reader(file)?);
     for (order, rec) in fa_reader2.records().flatten().enumerate() {
         if get.contains(&order) {
-            w.write(rec.id(), rec.desc(), rec.seq())?;
+            let seq_new = wrap_fasta(rec.seq(), line_width)?;
+            w.write(rec.id(), rec.desc(), seq_new.as_slice())?;
         }
     }
     w.flush()?;
@@ -60,6 +63,7 @@ pub fn select_fasta2(
     n: usize, 
     seed: u64, 
     out: &Option<&str>,
+    line_width: usize,
     compression_level: u32
 ) -> Result<()> {
     let start = Instant::now();
@@ -89,7 +93,8 @@ pub fn select_fasta2(
     let fo = file_writer(out, compression_level)?;
     let mut w = fasta::Writer::new(fo);
     for rec in get {
-        w.write(rec.id(), rec.desc(), rec.seq())?;
+        let seq_new = wrap_fasta(rec.seq(), line_width)?;
+        w.write(rec.id(), rec.desc(), seq_new.as_slice())?;
     }
     w.flush()?;
 

@@ -2,21 +2,37 @@ use clap::{Parser,value_parser};
 
 #[derive(Parser, Debug)]
 #[command(
+    name = "Fakit",
     author = "sharkLoc",
-    version = "0.2.11",
+    version = "0.3.0",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
-    before_help = None,
+    before_help = r"Fakit supports reading and writing gzip (.gz) format.
+Bzip2 (.bz2) and xz (.xz) format is supported since v0.3.0.
+Under the same compression level, xz has the highest compression ratio but consumes more time.
+
+Compression level:
+  format   range   default   crate
+  gzip     1-9     6         https://crates.io/crates/flate2
+  bzip2    1-9     6         https://crates.io/crates/bzip2
+  xz       1-9     6         https://crates.io/crates/xz2",
     help_template = "{name}: {about}\n\nVersion: {version}\
     \n\nAuthors: {author} <mmtinfo@163.com>\
     \nSource code: https://github.com/sharkLoc/fakit.git\
-    \n\n{usage-heading} {usage}\n\n{all-args}\n"
+    \n\n{before-help}
+{usage-heading} {usage}\n\n{all-args}\n\nUse \"fakit help [command]\" for more information about a command"
 )]
 pub struct Args {
     #[clap(subcommand)]
     pub command: Subcli,
-    /// set gzip compression level 1 (compress faster) - 9 (compress better) for gzip output file,
+    /// line width when outputting fasta sequences, 0 for no wrap
+    #[arg(short = 'w', long = "line-width", default_value_t = 70,
+        global = true, value_name = "int",
+        help_heading = Some("Global Arguments")
+    )]
+    pub width: usize,
+    /// set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file,
     /// just work with option -o/--out
     #[arg(long = "compress-level", default_value_t = 6, global = true,
         value_parser = value_parser!(u32).range(1..=9), value_name = "int",
@@ -41,29 +57,30 @@ pub struct Args {
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 pub enum Subcli {
-    /// Get first N records from fasta file
+    /// get first N records from fasta file
+    #[command(visible_alias = "head")]
     topn {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// print first N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10)]
         num: usize,
-        /// output fasta[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
-        output: Option<String>,
-    }, 
-    /// Convert fasta to fastq file
-    fa2fq {
-        /// input fasta[.gz] file, or read from stdin
-        input: Option<String>,
-        /// fasta to fastq and generate fake fastq quality.
-        #[arg(short = 'q', long = "qual", default_value_t = 'F')]
-        qual: char,
-        /// output fastq file name[.gz], or write to stdout, file name ending in .gz will be compressed automatically
+        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
-    /// Create index and random access to fasta files
+    /// convert fasta to fastq file
+    fa2fq {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// fasta to fastq and generate fake fastq quality.
+        #[arg(short = 'Q', long = "qual", default_value_t = 'F')]
+        qual: char,
+        /// output fastq file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out")]
+        output: Option<String>,
+    },
+    /// create index and random access to fasta files
     #[command(visible_alias="fai")]
     faidx {
         /// input uncompressed fasta file
@@ -72,18 +89,22 @@ pub enum Subcli {
         /// usage:  fakit faidx seq.fa chr1:1-5000 chr2:100-800 ...
         #[arg(verbatim_doc_comment)]
         region: Option<Vec<String>>,
-    },
-    /// Strip of white spaces in fasta sequences
+    }, 
+    /// flatten fasta sequences
+    #[command(visible_alias = "flat")]
     flatten {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
-        /// output fasta file name[.gz], or write to stdout, file name ending in .gz will be compressed automatically
+        /// if specified, keep sequence id description
+        #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
+        keep: bool,
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out")]
         output: Option<String>,
     },
-    /// Print fasta records in a range
+    /// print fasta records in a range
     range {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// skip first int fasta records
         #[arg(short = 's', long = "skip", default_value_t = 0)]
@@ -91,81 +112,80 @@ pub enum Subcli {
         /// take int fasta records
         #[arg(short = 't', long = "take")]
         take: usize,
-        /// fasta output file name or write to stdout, files ending in .gz will be compressed automatically
+        /// fasta output file name or write to stdout, files ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out")]
         out: Option<String>,
 
     },
-    /// Re-length fasta sequence 
-    relen {
-        /// input fasta[.gz] file, or read from stdin
-        input: Option<String>,
-        /// specify each seq length, 0 for a single line  
-        #[arg(short = 'l', long = "len", default_value_t = 70)]
-        len: usize,
-        /// output fasta[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
-        output: Option<String>,
-    }, 
-    /// Rename sequence id in fasta file
+    /// rename sequence id in fasta file
     rename {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// if specified, keep sequence id description
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool, 
         /// set new id prefix for sequence
-        #[arg(short = 'p', long = "prefix")]
+        #[arg(short = 'p', long = "prefix", value_name = "str")]
         prefix: Option<String>,
-        /// output fasta[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
-    /// Get a reverse-complement of fasta file.
+    /// get a reverse-complement of fasta file.
     #[command(visible_alias = "rev")]
     reverse {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// if set, just output reverse sequences
         #[arg(short = 'r', long = "reverse", help_heading = Some("FLAGS"))]
         rev: bool,
-        /// output file name[.gz] or write to stdout, file ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
-    /// Stat dna fasta gc content by sliding windows
+    /// stat dna fasta gc content by sliding windows
+    #[command(visible_alias = "slide")]
     window {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// set sliding window size
-        #[arg(short = 'w', long = "window", default_value_t = 500)]
+        #[arg(short = 'W', long = "window-size", default_value_t = 500, value_name = "int")]
         wind: usize,
         /// set sliding window step size
-        #[arg(short= 's', long = "step", default_value_t = 100)]
+        #[arg(short= 's', long = "step-size", default_value_t = 100, value_name = "int")]
         step: usize,
         /// if specified, keep fasta format in output result
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool,
-        /// output result[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
+        /// output result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         ///header format: seqid    start   end gc_rate sequence
-        #[arg(short = 'o', long = "out",verbatim_doc_comment )]
+        #[arg(short = 'o', long = "out",verbatim_doc_comment, value_name = "str")]
         output: Option<String>,
-    },
-    /// Convert all bases to lower/upper case
+    }, 
+    /// convert all bases to lower/upper case
     seq {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// if specified, convert all bases to lowercase
-        #[arg(short = 'l', long = "lower")]
+        #[arg(short = 'l', long = "lower-case")]
         lower: bool,
-        /// output file name or write to stdout, file ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// if specified, convert all bases to uppercase
+        #[arg(short = 'u', long = "upper-case")]
+        upper: bool,
+        /// fasta sequences shorter than length required will be discarded
+        #[arg(short = 'm', long = "min-len", value_name = "int")]
+        min: Option<usize>,
+        /// fasta sequences longer than length required will be discarded
+        #[arg(short = 'M', long = "max-len", value_name = "int")]
+        max: Option<usize>,
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
-    /// Sort fasta file by name/seq/gc/length
+    /// sort fasta file by name/seq/gc/length
     #[command(before_help = "note: all records will be readed into memory")]
     sort {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// sort sequences by name
         #[arg(short = 'n', long = "sort-by-name" ,help_heading = Some("FLAGS"))]
@@ -182,11 +202,11 @@ pub enum Subcli {
         /// output reversed result
         #[arg(short = 'r', long = "reverse", help_heading = Some("FLAGS"))]
         reverse: bool,
-        /// output file name or write to stdout, file ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
-    /// Search subsequences/motifs from fasta file
+    /// search subsequences/motifs from fasta file
     search {
         /// input fasta[.gz] file, or read from stdin
         input: Option<String>,
@@ -197,51 +217,52 @@ pub enum Subcli {
         /// if specified, show header in result
         #[arg(short = 'H', long = "header", help_heading = Some("FLAGS"))]
         Header: bool,
-        /// output search result[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out" )]
+        /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str" )]
         output: Option<String>,
     },
-    /// Shuffle fasta sequences
+    /// shuffle fasta sequences
     #[command(before_help = "note: all records will be readed into memory")]
     shuffle {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// set rand seed.
-        #[arg(short = 's', long = "seed", default_value_t = 69)]
+        #[arg(short = 's', long = "seed", default_value_t = 69, value_name = "int")]
         seed: u64,
-        /// output file name or write to stdout, file ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
-    /// Subsample sequences from big fasta file
+    /// subsample sequences from big fasta file
     subfa {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// set rand seed
-        #[arg(short = 's', long = "seed", default_value_t = 69)]
+        #[arg(short = 's', long = "seed", default_value_t = 69, value_name = "int")]
         seed: u64,
         /// reduce much memory but cost more time
         #[arg(short = 'r', long = "rdc", help_heading=Some("FLAGS"))]
         rdc: bool,
         /// subseq number
-        #[arg(short = 'n', long = "num")]
+        #[arg(short = 'n', long = "num", value_name = "int")]
         num: usize,
-        /// output fasta[.gz] file name, or write to stdout, file name ending in .gz will be compressed automatically
-        #[arg(short = 'o', long = "out")]
+        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
-    },
-    /// Split fasta file by sequence id
+    }, 
+    /// split fasta file by sequence id
     split {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
-        /// set output file extension, eg. fa, fa.gz, fna, fna.gz
-        #[arg(short = 'e', long = "ext")]
+        /// set output file extension, eg. fa, fa.gz, fna.xz, fna.bz2
+        #[arg(short = 'e', long = "ext", value_name = "str")]
         ext: String,
         /// split fasta file output dir, default: current dir
-        #[arg(short = 'o', long = "outdir")]
+        #[arg(short = 'o', long = "outdir", value_name = "str")]
         outdir: Option<String>,
     },
-    /// A simple summary for DNA fasta files
+    /// simple summary for dna fasta files
+    #[command(visible_alias = "stat")]
     summ {
         /// files to process, eg. *.fasta
         /// usage:  fakit summ *.fa[.gz]
@@ -252,10 +273,10 @@ pub enum Subcli {
         #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
         all: bool,
     },
-    /// Show codon table and amino acid name
+    /// show codon table and amino acid name
     codon {
-        /// Amino acid short name eg. S
-        #[arg(short='n', long="name")]
+        /// amino acid short name eg. S
+        #[arg(short='n', long="name", value_name = "str")]
         name: Option<String>,
     }
 }

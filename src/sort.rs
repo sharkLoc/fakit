@@ -1,6 +1,7 @@
 use crate::utils::*;
+use crate::wrap::*;
 use anyhow::{Error, Ok};
-use bio::io::fasta;
+use bio::io::fasta::{self, Record};
 use std::time::Instant;
 use log::*;
 
@@ -14,6 +15,7 @@ pub fn sort_fasta(
     sort_by_length: bool,
     reverse: bool,
     out: &Option<&str>,
+    line_width: usize,
     compression_level: u32,
 ) -> Result<(),Error> {
     let start = Instant::now();
@@ -22,9 +24,7 @@ pub fn sort_fasta(
     } else {
         info!("reading from stdin");
     }
-    if reverse {
-        info!("output reversed result");
-    }
+    
     let mut n = 0;
     if sort_by_gc { 
         n += 1;
@@ -104,10 +104,16 @@ pub fn sort_fasta(
     info!("sort done, start to output ...");
     let mut fa_writer = file_writer(out, compression_level).map(fasta::Writer::new)?;
     for rec in vec_reads {
-        fa_writer.write_record(&rec)?;
+        let seq_new = wrap_fasta(rec.seq(), line_width)?;
+        let rec_new = Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice());
+        fa_writer.write_record(&rec_new)?;
     }
     fa_writer.flush()?;
-
+    
+    if reverse {
+        info!("output reversed result");
+    }
     info!("time elapsed is: {:?}",start.elapsed());
+    
     Ok(())
 }

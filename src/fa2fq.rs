@@ -1,8 +1,6 @@
-use std::{
-    time::Instant,
-    io::Result
-};
+use std::time::Instant;
 use bio::io::{fastq,fasta};
+use anyhow::Result;
 use crate::utils::*;
 use log::*;
 

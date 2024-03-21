@@ -1,6 +1,7 @@
 use crate::utils::*;
-use bio::io::fasta;
-use std::io::Result;
+use crate::wrap::*;
+use bio::io::fasta::{self,Record};
+use anyhow::Result;
 use log::*;
 use std::time::Instant;
 use rand::prelude::*;
@@ -11,6 +12,7 @@ pub fn shuffle_fasta(
     file: &Option<&str>,
     seed: u64,
     out: &Option<&str>,
+    line_width: usize,
     compression_level: u32, 
 ) -> Result<()> {
     let start = Instant::now();
@@ -26,7 +28,9 @@ pub fn shuffle_fasta(
     
     let mut vec_reads = vec![];
     for rec in fa_reader.records().flatten() {
-        vec_reads.push(rec);
+        let seq_new = wrap_fasta(rec.seq(), line_width)?;
+        let rec_new = Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice());
+        vec_reads.push(rec_new);
     }
     
     info!("all records has been readed into memory, start shuffle ...");
