@@ -13,7 +13,7 @@ pub fn wrap_fasta(
     loop {
         index += line_width;
         let start = index - line_width;
-        if index <= seq_len {
+        if index < seq_len {
             let window = &seq_slice[start..index];
             seq_new.push(window);
             seq_new.push("\n".as_bytes());

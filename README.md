@@ -19,7 +19,7 @@ cargo install fakit
 ```bash
 Fakit: A simple program for fasta file manipulation
 
-Version: 0.3.0
+Version: 0.3.1
 
 Authors: sharkLoc <mmtinfo@163.com>
 Source code: https://github.com/sharkLoc/fakit.git
@@ -39,6 +39,7 @@ Usage: fakit [OPTIONS] <COMMAND>
 
 Commands:
   topn     get first N records from fasta file [aliases: head]
+  tail     get last N records from fasta file
   fa2fq    convert fasta to fastq file
   faidx    create index and random access to fasta files [aliases: fai]
   flatten  flatten fasta sequences [aliases: flat]
@@ -46,12 +47,13 @@ Commands:
   rename   rename sequence id in fasta file
   reverse  get a reverse-complement of fasta file [aliases: rev]
   window   stat dna fasta gc content by sliding windows [aliases: slide]
-  seq      convert all bases to lower/upper case
+  seq      convert all bases to lower/upper case, filter by length
   sort     sort fasta file by name/seq/gc/length
   search   search subsequences/motifs from fasta file
   shuffle  shuffle fasta sequences
   subfa    subsample sequences from big fasta file
   split    split fasta file by sequence id
+  split2   split fasta file by sequence number
   summ     simple summary for dna fasta files [aliases: stat]
   codon    show codon table and amino acid name
   help     Print this message or the help of the given subcommand(s)

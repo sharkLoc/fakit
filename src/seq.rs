@@ -12,6 +12,8 @@ pub fn seq_fa(
     upper: bool,
     min_len: Option<usize>,
     max_len: Option<usize>,
+    min_gc: Option<f64>,
+    max_gc: Option<f64>,
     output: &Option<&str>,
     line_width: usize,
     compression_level: u32,
@@ -39,6 +41,7 @@ pub fn seq_fa(
     let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
     let mut count = 0usize;
+
     for rec in fp.records().flatten() {
         if let Some(min_len) = min_len {
             if rec.seq().len() < min_len {
@@ -53,6 +56,21 @@ pub fn seq_fa(
             }
         }
         
+        if let Some(min_gc) = min_gc {
+            let gc = rec.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / rec.seq().len() as f64;
+            if gc < min_gc {
+                trace!("sequence id: {} skipped, gc content less than required", rec.id());
+                continue;
+            }
+        }
+        if let Some(max_gc) = max_gc {
+            let gc = rec.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / rec.seq().len() as f64;
+            if gc > max_gc {
+                trace!("sequence id: {} skipped, gc content more than required", rec.id());
+                continue;
+            }
+        }
+
         let seq = if lower { 
             rec.seq().to_ascii_lowercase()
         } else if upper {

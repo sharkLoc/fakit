@@ -8,6 +8,8 @@ mod logger;
 use logger::*;
 mod top;
 use top::*;
+mod tail;
+use tail::*;
 mod fa2fq;
 use fa2fq::*;
 mod faidx;
@@ -32,6 +34,8 @@ mod sort;
 use sort::*;
 mod split;
 use split::*;
+mod split2;
+use split2::*;
 mod subfa;
 use subfa::*;
 mod summ;
@@ -63,6 +67,21 @@ fn main() -> Result<(), Error> {
                     top_n_records(num, &None, &Some(&output), args.width, args.compression_level)?;
                 } else {
                     top_n_records(num, &None, &None, args.width, args.compression_level)?;
+                }
+            } 
+        }
+        Subcli::tail { input, num, output } => {
+            if let Some(input) = input {
+                if let Some(output) = output {
+                    tail_n_records(num, &Some(&input), &Some(&output), args.width, args.compression_level)?;
+                } else {
+                    tail_n_records(num, &Some(&input), &None, args.width, args.compression_level)?;
+                }
+            } else {
+                if let Some(output) = output {
+                    tail_n_records(num, &None, &Some(&output), args.width, args.compression_level)?;
+                } else {
+                    tail_n_records(num, &None, &None, args.width, args.compression_level)?;
                 }
             } 
         }
@@ -168,18 +187,18 @@ fn main() -> Result<(), Error> {
                 }
             }
         } 
-        Subcli::seq { input, lower, upper, min, max, out } => {
+        Subcli::seq { input, lower, upper, min, max, gc_min, gc_max, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {
-                    seq_fa(&Some(&input), lower, upper, min, max, &Some(&out), args.width, args.compression_level)?;
+                    seq_fa(&Some(&input), lower, upper, min, max, gc_min, gc_max,&Some(&out), args.width, args.compression_level)?;
                 } else {
-                    seq_fa(&Some(&input), lower, upper, min, max, &None, args.width, args.compression_level)?;
+                    seq_fa(&Some(&input), lower, upper, min, max, gc_min, gc_max,&None, args.width, args.compression_level)?;
                 }
             } else {
                 if let Some(out) = out {
-                    seq_fa(&None, lower, upper, min, max, &Some(&out), args.width, args.compression_level)?;
+                    seq_fa(&None, lower, upper, min, max, gc_min, gc_max,&Some(&out), args.width, args.compression_level)?;
                 } else {
-                    seq_fa(&None, lower, upper, min, max, &None, args.width, args.compression_level)?;
+                    seq_fa(&None, lower, upper, min, max, gc_min, gc_max,&None, args.width, args.compression_level)?;
                 }
             }
         } 
@@ -275,6 +294,13 @@ fn main() -> Result<(), Error> {
                 } else {
                     split_fa(&None, ext, None, args.width, args.compression_level)?;
                 }
+            }
+        }
+        Subcli::split2 { input, num, gzip, bzip2, xz, name } => {
+            if let Some(input) = input {
+                split_chunk(&Some(&input), num, gzip, bzip2, xz, &name, args.width, args.compression_level)?;
+            } else {
+                split_chunk(&None, num, gzip, bzip2, xz, &name, args.width, args.compression_level)?;
             }
         }
         Subcli::codon { name } => {

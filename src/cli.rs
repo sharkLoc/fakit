@@ -4,7 +4,7 @@ use clap::{Parser,value_parser};
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.0",
+    version = "0.3.1",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -63,6 +63,17 @@ pub enum Subcli {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// print first N fasta records
+        #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
+        num: usize,
+        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
+        output: Option<String>,
+    },
+    /// get last N records from fasta file
+    tail {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// print last N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
         num: usize,
         /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
@@ -162,7 +173,7 @@ pub enum Subcli {
         #[arg(short = 'o', long = "out",verbatim_doc_comment, value_name = "str")]
         output: Option<String>,
     }, 
-    /// convert all bases to lower/upper case
+    /// convert all bases to lower/upper case, filter by length
     seq {
         /// input fasta file, or read from stdin
         input: Option<String>,
@@ -172,12 +183,18 @@ pub enum Subcli {
         /// if specified, convert all bases to uppercase
         #[arg(short = 'u', long = "upper-case")]
         upper: bool,
-        /// fasta sequences shorter than length required will be discarded
+        /// if specified, fasta sequences shorter than length required will be discarded
         #[arg(short = 'm', long = "min-len", value_name = "int")]
         min: Option<usize>,
-        /// fasta sequences longer than length required will be discarded
+        /// if specified, fasta sequences longer than length required will be discarded
         #[arg(short = 'M', long = "max-len", value_name = "int")]
         max: Option<usize>,
+        /// if specified, fasta sequences gc content less than gc_min required will be discarded
+        #[arg(short = 'g', long = "gc-min", value_name = "float")]
+        gc_min: Option<f64>,
+        /// if specified, fasta sequences gc content more than length required will be discarded
+        #[arg(short = 'G', long = "gc-max", value_name = "float")]
+        gc_max: Option<f64>,
         /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
@@ -251,6 +268,7 @@ pub enum Subcli {
         output: Option<String>,
     }, 
     /// split fasta file by sequence id
+    #[command(before_help = "note: each sequence results in a separate file")]
     split {
         /// input fasta file, or read from stdin
         input: Option<String>,
@@ -260,6 +278,26 @@ pub enum Subcli {
         /// split fasta file output dir, default: current dir
         #[arg(short = 'o', long = "outdir", value_name = "str")]
         outdir: Option<String>,
+    },
+    /// split fasta file by sequence number
+    split2 {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// set record number for each mini fasta file
+        #[arg(short = 'n', long = "num", default_value_t = 100, value_name = "int")]
+        num: usize,
+        /// if specified, output gzip compressed file
+        #[arg(short = 'z', long = "gzip", help_heading = Some("FLAGS"))]
+        gzip: bool,
+        /// if specified, output bzip2 compressed file
+        #[arg(short = 'Z', long = "bzip2", help_heading = Some("FLAGS"))]
+        bzip2: bool,
+        /// if specified, output xz compressed file
+        #[arg(short = 'x', long = "xz", help_heading = Some("FLAGS"))]
+        xz: bool,
+        /// set output mini fasta file prefix name
+        #[arg(short = 'p', long = "prefix", default_value_t = String::from("sub"), value_name = "str")]
+        name: String,
     },
     /// simple summary for dna fasta files
     #[command(visible_alias = "stat")]
