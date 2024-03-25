@@ -39,20 +39,20 @@ pub fn split_chunk(
 
     let (mut flag, mut index) = (0usize, 0usize);
     let out = if gzip {
-        format!("{}{}.fastq.gz",out_pre,index)
+        format!("{}{}.fasta.gz",out_pre,index)
     } else if bzip2 {
-        format!("{}{}.fastq.bz2",out_pre,index)
+        format!("{}{}.fasta.bz2",out_pre,index)
     } else if xz {
-        format!("{}{}.fastq.xz",out_pre,index)
+        format!("{}{}.fasta.xz",out_pre,index)
     } else {
-        format!("{}{}.fastq",out_pre,index)
+        format!("{}{}.fasta",out_pre,index)
     };
 
-    let fq_reader = fasta::Reader::new(file_reader(file)?);
+    let fa_reader = fasta::Reader::new(file_reader(file)?);
     let mut fh = vec![fasta::Writer::new(file_writer(&Some(&out), compression_level)?)];
     
     info!("start to write file: {}",out);
-    for rec in fq_reader.records().flatten() {
+    for rec in fa_reader.records().flatten() {
         let seq_new = wrap_fasta(rec.seq(), line_width)?;
         if flag < num {
             let fhthis = fh.get_mut(index).unwrap();
@@ -61,13 +61,13 @@ pub fn split_chunk(
         } else {
             index += 1;
             let out = if gzip {
-                format!("{}{}.fastq.gz",out_pre,index)
+                format!("{}{}.fasta.gz",out_pre,index)
             } else if bzip2 {
-                format!("{}{}.fastq.bz2",out_pre,index)
+                format!("{}{}.fasta.bz2",out_pre,index)
             } else if xz {
-                format!("{}{}.fastq.xz",out_pre,index)
+                format!("{}{}.fasta.xz",out_pre,index)
             } else {
-                format!("{}{}.fastq",out_pre,index)
+                format!("{}{}.fasta",out_pre,index)
             };
             fh.push(fasta::Writer::new(file_writer(&Some(&out), compression_level)?));
             let fhthis = fh.get_mut(index).unwrap();
