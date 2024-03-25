@@ -4,7 +4,7 @@ use clap::{Parser,value_parser};
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.1",
+    version = "0.3.2",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -249,6 +249,17 @@ pub enum Subcli {
         /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
+    },
+    /// report fasta sequence base count
+    size {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// if specified, show more information
+        #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
+        all: bool,
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
+        output: Option<String>,
     },
     /// subsample sequences from big fasta file
     subfa {

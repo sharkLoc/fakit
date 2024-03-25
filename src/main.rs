@@ -40,6 +40,8 @@ mod subfa;
 use subfa::*;
 mod summ;
 use summ::*;
+mod size;
+use size::*;
 mod wrap;
 mod codon;
 use codon::*;
@@ -244,6 +246,21 @@ fn main() -> Result<(), Error> {
                     search_fa(&None, &Some(&output), &pat ,Header, args.compression_level)?;
                 } else {
                     search_fa(&None, &None, &pat, Header, args.compression_level)?;
+                }
+            }
+        }
+        Subcli::size { input, all, output } => {
+            if let Some(input) = input {
+                if let Some(output) = output {
+                    size_fasta(&Some(&input), all, &Some(&output), args.compression_level)?;
+                } else {
+                    size_fasta(&Some(&input), all, &None, args.compression_level)?;
+                }
+            } else {
+                if let Some(output) = output {
+                    size_fasta(&None, all, &Some(&output), args.compression_level)?;
+                } else {
+                    size_fasta(&None, all, &None, args.compression_level)?;
                 }
             }
         }
