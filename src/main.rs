@@ -24,6 +24,8 @@ mod reverse;
 use reverse::*;
 mod search;
 use search::*;
+mod grep;
+use grep::*;
 mod seq;
 use seq::*;
 mod shuffle;
@@ -189,6 +191,21 @@ fn main() -> Result<(), Error> {
                 }
             }
         } 
+        Subcli::grep { input, pat, name, seq, ignore, output } => {
+            if let Some(input) = input {
+                if let Some(out) = output {
+                    grep_fasta(&Some(&input), &Some(&out), &pat, ignore, name, seq, args.width, args.compression_level)?;
+                } else {
+                    grep_fasta(&Some(&input), &None, &pat, ignore, name, seq, args.width, args.compression_level)?;
+                }
+            } else {
+                if let Some(out) = output {
+                    grep_fasta(&None, &Some(&out), &pat, ignore, name, seq, args.width, args.compression_level)?;
+                } else {
+                    grep_fasta(&None, &None, &pat, ignore, name, seq, args.width, args.compression_level)?;
+                }
+            }
+        }
         Subcli::seq { input, lower, upper, min, max, gc_min, gc_max, out } => {
             if let Some(input) = input {
                 if let Some(out) = out {

@@ -19,7 +19,7 @@ cargo install fakit
 ```bash
 Fakit: A simple program for fasta file manipulation
 
-Version: 0.3.2
+Version: 0.3.3
 
 Authors: sharkLoc <mmtinfo@163.com>
 Source code: https://github.com/sharkLoc/fakit.git
@@ -47,6 +47,7 @@ Commands:
   rename   rename sequence id in fasta file
   reverse  get a reverse-complement of fasta file [aliases: rev]
   window   stat dna fasta gc content by sliding windows [aliases: slide]
+  grep     grep fasta sequences by name/seq
   seq      convert all bases to lower/upper case, filter by length
   sort     sort fasta file by name/seq/gc/length
   search   search subsequences/motifs from fasta file

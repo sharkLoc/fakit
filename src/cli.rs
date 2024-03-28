@@ -4,7 +4,7 @@ use clap::{Parser,value_parser};
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.2",
+    version = "0.3.3",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -173,6 +173,27 @@ pub enum Subcli {
         #[arg(short = 'o', long = "out",verbatim_doc_comment, value_name = "str")]
         output: Option<String>,
     }, 
+    /// grep fasta sequences by name/seq
+    grep {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// specify regex pattern/motif, e.g., -p "ATC{2,}" or -p ATCCG, search multiple pattern/motif, -p "ATCCG|GCTAA"
+        /// when searching by sequence name, the sequence prefix ">" is not included in the header.
+        #[arg(short = 'p', long = "pattern",verbatim_doc_comment, value_name = "str")]
+        pat: String,
+        /// grep sequences by full name
+        #[arg(short = 'n', long = "by-name", help_heading = Some("FLAGS"))]
+        name: bool,
+        /// grep sequences by sequence
+        #[arg(short = 's', long = "by-seq", help_heading = Some("FLAGS"))]
+        seq: bool,
+        /// grep sequences by sequence
+        #[arg(short = 'i', long = "ignore-case", help_heading = Some("FLAGS"))]
+        ignore: bool,
+        /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str" )]
+        output: Option<String>,
+    },
     /// convert all bases to lower/upper case, filter by length
     seq {
         /// input fasta file, or read from stdin
@@ -225,11 +246,11 @@ pub enum Subcli {
     },
     /// search subsequences/motifs from fasta file
     search {
-        /// input fasta[.gz] file, or read from stdin
+        /// input fasta file, or read from stdin
         input: Option<String>,
         /// specify uppercase pattern/motif, e.g., -p "ATC{2,}" or -p ATCCG
         ///search multiple pattern/motif, -p "ATCCG|GCTAA"
-        #[arg(short = 'p', long = "pattern",verbatim_doc_comment)]
+        #[arg(short = 'p', long = "pattern",verbatim_doc_comment, value_name = "str")]
         pat: String,
         /// if specified, show header in result
         #[arg(short = 'H', long = "header", help_heading = Some("FLAGS"))]
