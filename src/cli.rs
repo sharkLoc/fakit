@@ -60,7 +60,7 @@ pub struct Args {
 #[allow(non_snake_case)]
 pub enum Subcli {
     /// get first N records from fasta file
-    #[command(visible_alias = "head")]
+    #[command(visible_alias = "head", before_help = "note: the command need to read file twice, do not use in stream")]
     topn {
         /// input fasta file, or read from stdin
         input: Option<PathBuf>,
