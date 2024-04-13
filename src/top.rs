@@ -1,25 +1,24 @@
 use crate::utils::*;
-use bio::io::fasta;
-use std::time::Instant;
-use log::*;
-use anyhow::{Result,Error};
 use crate::wrap::wrap_fasta;
+use anyhow::{Error, Result};
+use bio::io::fasta;
+use log::*;
+use std::{path::Path, time::Instant};
 
-
-pub fn top_n_records(
+pub fn top_n_records<P: AsRef<Path> + Copy>(
     number: usize,
-    input: &Option<&str>,
-    output: &Option<&str>,
+    input: Option<P>,
+    output: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), Error> {
     let start = Instant::now();
     if let Some(file) = input {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
-    info!("get top {} records",number);
+    info!("get top {} records", number);
 
     let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
@@ -58,7 +57,7 @@ pub fn top_n_records(
         }
     }
     fo.flush()?;
-    
-    info!("time elapsed is: {:?}",start.elapsed());
+
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

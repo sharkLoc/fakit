@@ -1,29 +1,29 @@
-use anyhow::Result;
-use std::time::Instant;
-use bio::io::fasta;
-use rand::{prelude::*, Rng};
-use rand_pcg::Pcg64;
-use log::*;
 use crate::utils::*;
 use crate::wrap::*;
-
+use anyhow::Result;
+use bio::io::fasta;
+use log::*;
+use rand::{prelude::*, Rng};
+use rand_pcg::Pcg64;
+use std::path::Path;
+use std::time::Instant;
 
 // reduce much memory but cost more time
-pub fn select_fasta(
-    file: &Option<&str>, 
-    n: usize, 
-    seed: u64, 
-    out: &Option<&str>,
+pub fn select_fasta<P: AsRef<Path> + Copy>(
+    file: Option<P>,
+    n: usize,
+    seed: u64,
+    out: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = file {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
-    info!("rand seed: {}",seed);
+    info!("rand seed: {}", seed);
     info!("reduce much memory but cost more time");
 
     let mut rng = Pcg64::seed_from_u64(seed);
@@ -51,28 +51,27 @@ pub fn select_fasta(
         }
     }
     w.flush()?;
-    
-    info!("time elapsed is: {:?}",start.elapsed());
+
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }
 
-
 // fast mode but cost more memory
-pub fn select_fasta2(
-    file: &Option<&str>, 
-    n: usize, 
-    seed: u64, 
-    out: &Option<&str>,
+pub fn select_fasta2<P: AsRef<Path> + Copy>(
+    file: Option<P>,
+    n: usize,
+    seed: u64,
+    out: Option<P>,
     line_width: usize,
-    compression_level: u32
+    compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = file {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
-    info!("rand seed: {}",seed);
+    info!("rand seed: {}", seed);
     info!("fast mode but cost more memory");
 
     let mut rng = Pcg64::seed_from_u64(seed);
@@ -98,6 +97,6 @@ pub fn select_fasta2(
     }
     w.flush()?;
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

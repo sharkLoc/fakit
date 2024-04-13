@@ -1,26 +1,25 @@
 use crate::utils::*;
 use crate::wrap::*;
+use anyhow::Result;
 use bio::io::fasta;
 use log::*;
-use std::time::Instant;
-use anyhow::Result;
+use std::{path::Path, time::Instant};
 
-
-pub fn seq_fa(
-    input: &Option<&str>, 
+pub fn seq_fa<P: AsRef<Path> + Copy>(
+    input: Option<P>,
     lower: bool,
     upper: bool,
     min_len: Option<usize>,
     max_len: Option<usize>,
     min_gc: Option<f64>,
     max_gc: Option<f64>,
-    output: &Option<&str>,
+    output: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = input {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
@@ -55,23 +54,39 @@ pub fn seq_fa(
                 continue;
             }
         }
-        
+
         if let Some(min_gc) = min_gc {
-            let gc = rec.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / rec.seq().len() as f64;
+            let gc = rec
+                .seq()
+                .iter()
+                .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
+                .count() as f64
+                / rec.seq().len() as f64;
             if gc < min_gc {
-                trace!("sequence id: {} skipped, gc content less than required", rec.id());
+                trace!(
+                    "sequence id: {} skipped, gc content less than required",
+                    rec.id()
+                );
                 continue;
             }
         }
         if let Some(max_gc) = max_gc {
-            let gc = rec.seq().iter().filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c').count() as f64 / rec.seq().len() as f64;
+            let gc = rec
+                .seq()
+                .iter()
+                .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
+                .count() as f64
+                / rec.seq().len() as f64;
             if gc > max_gc {
-                trace!("sequence id: {} skipped, gc content more than required", rec.id());
+                trace!(
+                    "sequence id: {} skipped, gc content more than required",
+                    rec.id()
+                );
                 continue;
             }
         }
 
-        let seq = if lower { 
+        let seq = if lower {
             rec.seq().to_ascii_lowercase()
         } else if upper {
             rec.seq().to_ascii_uppercase()
@@ -85,6 +100,6 @@ pub fn seq_fa(
     fo.flush()?;
 
     info!("total {} sequences output", count);
-    info!("time elapsed is: {:?}",start.elapsed());
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

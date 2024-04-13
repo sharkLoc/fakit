@@ -1,15 +1,14 @@
 use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
-use std::time::Instant;
 use log::*;
+use std::{path::Path, time::Instant};
 
-
-pub fn silding_window(
+pub fn silding_window<P: AsRef<Path> + Copy>(
     step: usize,
     wind: usize,
-    file: &Option<&str>,
-    out: &Option<&str>,
+    file: Option<P>,
+    out: Option<P>,
     keep: bool,
     compression_level: u32,
 ) -> Result<(), Error> {
@@ -19,7 +18,7 @@ pub fn silding_window(
     }
     let start = Instant::now();
     if let Some(file) = file {
-        info!("reading from file: {}", file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
@@ -36,33 +35,63 @@ pub fn silding_window(
         loop {
             if windows < len {
                 let fa = &seq[start..windows].to_ascii_uppercase();
-                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / wind as f64;
+                let gc =
+                    fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / wind as f64;
                 let fa_str = std::str::from_utf8(fa)?;
                 let out = if keep {
-                    format!(">{} {}-{}:{:.4}\n{}\n", rec.id(),start+1, windows, gc, fa_str)
+                    format!(
+                        ">{} {}-{}:{:.4}\n{}\n",
+                        rec.id(),
+                        start + 1,
+                        windows,
+                        gc,
+                        fa_str
+                    )
                 } else {
-                    format!("{}\t{}\t{}\t{:.4}\t{}\n", rec.id(),start+1, windows, gc, fa_str)
+                    format!(
+                        "{}\t{}\t{}\t{:.4}\t{}\n",
+                        rec.id(),
+                        start + 1,
+                        windows,
+                        gc,
+                        fa_str
+                    )
                 };
-                fo.write(out.as_bytes())?;
+                fo.write_all(out.as_bytes())?;
                 start += step;
                 windows += step;
             } else {
                 let fa = &seq[start..len].to_ascii_uppercase();
-                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / (len - start) as f64;
+                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64
+                    / (len - start) as f64;
                 let fa_str = std::str::from_utf8(fa)?;
                 let out = if keep {
-                    format!(">{} {}-{}:{:.4}\n{}\n",rec.id(), start+1, len, gc, fa_str)
+                    format!(
+                        ">{} {}-{}:{:.4}\n{}\n",
+                        rec.id(),
+                        start + 1,
+                        len,
+                        gc,
+                        fa_str
+                    )
                 } else {
-                    format!("{}\t{}\t{}\t{:.4}\t{}\n",rec.id(), start+1, len, gc, fa_str)
+                    format!(
+                        "{}\t{}\t{}\t{:.4}\t{}\n",
+                        rec.id(),
+                        start + 1,
+                        len,
+                        gc,
+                        fa_str
+                    )
                 };
-                fo.write(out.as_bytes())?;
+                fo.write_all(out.as_bytes())?;
                 windows = wind;
                 break;
             }
         }
-    } 
-    fo.flush()?;  
-    
-    info!("time elapsed is: {:?}",start.elapsed());
+    }
+    fo.flush()?;
+
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

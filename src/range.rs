@@ -1,22 +1,22 @@
-use anyhow::Result;
 use crate::utils::*;
 use crate::wrap::*;
+use anyhow::Result;
 use bio::io::fasta;
-use std::time::Instant;
 use log::*;
+use std::path::Path;
+use std::time::Instant;
 
-
-pub fn range_fasta(
-    input: &Option<&str>,
+pub fn range_fasta<P: AsRef<Path> + Copy>(
+    input: Option<P>,
     skip: usize,
     take: usize,
-    output: &Option<&str>,
+    output: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = input {
-        info!("reading from file: {}", file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
@@ -32,7 +32,7 @@ pub fn range_fasta(
         count += 1;
     }
     fp_writer.flush()?;
-    info!("total get sequence number: {}",count);
-    info!("time elapsed is: {:?}",start.elapsed());
+    info!("total get sequence number: {}", count);
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

@@ -1,8 +1,8 @@
+use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
-use crate::utils::*;
 use log::*;
-use std::time::Instant;
+use std::{path::Path, time::Instant};
 
 struct Seqinfo {
     count_a: usize,
@@ -14,20 +14,25 @@ struct Seqinfo {
 
 impl Seqinfo {
     fn new() -> Seqinfo {
-        Seqinfo { count_a: 0, count_t: 0, count_g: 0, count_c: 0, count_n: 0 }
+        Seqinfo {
+            count_a: 0,
+            count_t: 0,
+            count_g: 0,
+            count_c: 0,
+            count_n: 0,
+        }
     }
 }
 
-pub fn size_fasta(
-    input: &Option<&str>,
+pub fn size_fasta<P: AsRef<Path> + Copy>(
+    input: Option<P>,
     all: bool,
-    output: &Option<&str>,
+    output: Option<P>,
     compression_level: u32,
 ) -> Result<(), Error> {
-
     let start = Instant::now();
     if let Some(file) = input {
-        info!("reading from file: {}", file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
@@ -35,9 +40,9 @@ pub fn size_fasta(
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
     let mut out = file_writer(output, compression_level)?;
     if all {
-        out.write(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;
+        out.write_all(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;
     } else {
-        out.write(b"seq_name\tlength\n")?;
+        out.write_all(b"seq_name\tlength\n")?;
     }
     let mut recs = fa_reader.records();
     let mut n = 0usize;
@@ -51,19 +56,34 @@ pub fn size_fasta(
             for nt in rec.seq().iter() {
                 pos += 1;
                 match nt {
-                    &b'A' | &b'a' => {info.count_a += 1;},
-                    &b'T' | &b't' => {info.count_t += 1;},
-                    &b'G' | &b'g' => {info.count_g += 1;},
-                    &b'C' | &b'c' => {info.count_c += 1;},
-                    &b'N' | &b'n' => {info.count_n += 1;},
-                    _ => { 
-                        warn!("Error DNA base code in sequence {} position: {}",rec.id(), pos);
+                    &b'A' | &b'a' => {
+                        info.count_a += 1;
+                    }
+                    &b'T' | &b't' => {
+                        info.count_t += 1;
+                    }
+                    &b'G' | &b'g' => {
+                        info.count_g += 1;
+                    }
+                    &b'C' | &b'c' => {
+                        info.count_c += 1;
+                    }
+                    &b'N' | &b'n' => {
+                        info.count_n += 1;
+                    }
+                    _ => {
+                        warn!(
+                            "Error DNA base code in sequence {} position: {}",
+                            rec.id(),
+                            pos
+                        );
                         continue;
                     }
-                }    
+                }
             }
 
-            let buf = format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+            let buf = format!(
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
                 rec.id(),
                 rec.seq().len(),
                 info.count_a,
@@ -72,15 +92,14 @@ pub fn size_fasta(
                 info.count_c,
                 info.count_n
             );
-            out.write(buf.as_bytes())?;
-
+            out.write_all(buf.as_bytes())?;
         } else {
-            let buf = format!("{}\t{}\n",rec.id(),rec.seq().len());
-            out.write(buf.as_bytes())?;
+            let buf = format!("{}\t{}\n", rec.id(), rec.seq().len());
+            out.write_all(buf.as_bytes())?;
         }
     }
     out.flush()?;
-    info!("total sequence number: {}",n);
+    info!("total sequence number: {}", n);
     info!("time elapsed is: {:?}", start.elapsed());
 
     Ok(())

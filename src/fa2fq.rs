@@ -1,18 +1,18 @@
-use std::time::Instant;
+use std::{path::Path, time::Instant};
 use bio::io::{fastq,fasta};
 use anyhow::Result;
 use crate::utils::*;
 use log::*;
 
-pub fn fake_quality(
-    name: &Option<&str>, 
+pub fn fake_quality<P: AsRef<Path> + Copy>(
+    name: Option<P>, 
     qual: char,
-    out: &Option<&str>,
+    out: Option<P>,
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = name {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}",file.as_ref());
     } else {
         info!("reading from stdin");
     }

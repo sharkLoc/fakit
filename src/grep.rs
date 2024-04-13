@@ -1,29 +1,28 @@
-use anyhow::Error;
-use regex::RegexBuilder;
-use bio::io::fasta;
-use std::time::Instant;
-use log::*;
 use crate::utils::*;
 use crate::wrap::*;
+use anyhow::Error;
+use bio::io::fasta;
+use log::*;
+use regex::RegexBuilder;
+use std::{path::Path, time::Instant};
 
-
-pub fn grep_fasta(
-    file: &Option<&str>,
-    out: &Option<&str>,
+pub fn grep_fasta<P: AsRef<Path> + Copy>(
+    file: Option<P>,
+    out: Option<P>,
     pat: &str,
     case: bool,
     by_id: bool,
     by_seq: bool,
     line_width: usize,
     compression_level: u32,
-) -> Result<(),Error> {    
+) -> Result<(), Error> {
     let start = Instant::now();
     if let Some(file) = file {
-        info!("reading from file: {}",file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
-    
+
     let mut n = 0usize;
     if by_id {
         n += 1;
@@ -32,7 +31,7 @@ pub fn grep_fasta(
         n += 1;
     }
     match n {
-        1 => { () }
+        1 => (),
         0 => {
             error!("please specifiy one of the flags: -n or -s");
             std::process::exit(1);
@@ -42,7 +41,7 @@ pub fn grep_fasta(
             std::process::exit(1);
         }
     }
-    info!("regex pattern is: {}",pat);
+    info!("regex pattern is: {}", pat);
     let mut n = 0usize;
 
     let re = RegexBuilder::new(pat)
@@ -51,35 +50,35 @@ pub fn grep_fasta(
         .build()?;
 
     let mut fo = file_writer(out, compression_level).map(fasta::Writer::new)?;
-    
+
     if by_seq {
         let fp = file_reader(file).map(fasta::Reader::new)?;
-        for rec in fp.records().flatten(){
+        for rec in fp.records().flatten() {
             let seq_str = std::str::from_utf8(rec.seq())?;
             if let Some(_) = re.captures(seq_str) {
                 n += 1;
                 let seq_new = wrap_fasta(rec.seq(), line_width)?;
-                fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;  
+                fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;
             }
         }
     }
     if by_id {
         let fp = file_reader(file).map(fasta::Reader::new)?;
-        for rec in fp.records().flatten(){
+        for rec in fp.records().flatten() {
             let name = if let Some(desc) = rec.desc() {
-                format!("{} {}",rec.id(), desc)
+                format!("{} {}", rec.id(), desc)
             } else {
                 rec.id().to_owned()
             };
             if let Some(_) = re.captures(&name) {
                 n += 1;
                 let seq_new = wrap_fasta(rec.seq(), line_width)?;
-                fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;  
+                fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;
             }
         }
     }
     fo.flush()?;
-    info!("total match sequences number: {}",n);
-    info!("time elapsed is: {:?}",start.elapsed());
+    info!("total match sequences number: {}", n);
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

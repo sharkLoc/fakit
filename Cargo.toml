@@ -1,9 +1,9 @@
 [package]
 name = "fakit"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 authors = ["sharkLoc <mmtinfo@163.com>"]
-rust-version = "1.65.0"
+rust-version = "1.77.2"
 repository = "https://github.com/sharkLoc/fakit"
 description = "fakit: a simple program for fasta file manipulation"
 keywords = ["fasta", "fa", "cli", "sequence", "bio"]

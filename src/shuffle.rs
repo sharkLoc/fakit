@@ -1,38 +1,38 @@
 use crate::utils::*;
 use crate::wrap::*;
-use bio::io::fasta::{self,Record};
 use anyhow::Result;
+use bio::io::fasta::{self, Record};
 use log::*;
-use std::time::Instant;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+use std::path::Path;
+use std::time::Instant;
 
-
-pub fn shuffle_fasta(
-    file: &Option<&str>,
+pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
+    file: Option<P>,
     seed: u64,
-    out: &Option<&str>,
+    out: Option<P>,
     line_width: usize,
-    compression_level: u32, 
+    compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
     if let Some(file) = file {
-        info!("reading from file: {}", file);
+        info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
-    info!("rand seed: {}",seed);
+    info!("rand seed: {}", seed);
 
     let mut rng = Pcg64::seed_from_u64(seed);
     let fa_reader = file_reader(file).map(fasta::Reader::new)?;
-    
+
     let mut vec_reads = vec![];
     for rec in fa_reader.records().flatten() {
         let seq_new = wrap_fasta(rec.seq(), line_width)?;
         let rec_new = Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice());
         vec_reads.push(rec_new);
     }
-    
+
     info!("all records has been readed into memory, start shuffle ...");
     vec_reads.shuffle(&mut rng);
     info!("shuffle done, start write to output ...");
@@ -43,6 +43,6 @@ pub fn shuffle_fasta(
     }
     fa_writer.flush()?;
 
-    info!("time elapsed is: {:?}",start.elapsed());
+    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

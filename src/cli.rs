@@ -1,10 +1,12 @@
+use std::path::PathBuf;
+
 use clap::{Parser,value_parser};
 
 #[derive(Parser, Debug)]
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.3",
+    version = "0.3.4",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -61,13 +63,13 @@ pub enum Subcli {
     #[command(visible_alias = "head")]
     topn {
         /// input fasta file, or read from stdin
-        input: Option<String>,
+        input: Option<PathBuf>,
         /// print first N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
         num: usize,
         /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
-        output: Option<String>,
+        output: Option<PathBuf>,
     },
     /// get last N records from fasta file
     tail {
