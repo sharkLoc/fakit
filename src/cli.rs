@@ -6,7 +6,7 @@ use clap::{Parser,value_parser};
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.4",
+    version = "0.3.5",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
