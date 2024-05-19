@@ -68,7 +68,7 @@ where
         } else if zx_flag {
             Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
-                xz2::read::XzDecoder::new(fp),
+                xz2::read::XzDecoder::new_multi_decoder(fp),
             )))
         } else {
             Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp)))
