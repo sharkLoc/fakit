@@ -36,17 +36,19 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
 
     for rec in fa_reader.records().flatten() {
         let rev_seq = rec.seq().iter().copied().rev().collect::<Vec<u8>>();
-        let rc_seq = rev_seq
-            .iter()
-            .map(|x| maps.get(x).unwrap_or(&b'N'))
-            .collect::<Vec<&u8>>();
-
-        let rev_comp = rc_seq.iter().map(|x| **x).collect::<Vec<u8>>();
-        let seq_new = wrap_fasta(rev_comp.as_slice(), line_width)?;
 
         if rev {
-            out_writer.write(rec.id(), rec.desc(), seq_new.as_slice())?;
+            let seq_new = wrap_fasta(rev_seq.as_slice(), line_width)?;
+            out_writer.write(rec.id(), rec.desc(), &seq_new)?;
         } else {
+            let rc_seq = rev_seq
+                .iter()
+                .map(|x| maps.get(x).unwrap_or(&b'N'))
+                .collect::<Vec<&u8>>();
+
+            let rev_comp = rc_seq.iter().map(|x| **x).collect::<Vec<u8>>();
+            let seq_new = wrap_fasta(rev_comp.as_slice(), line_width)?;
+
             out_writer.write(rec.id(), rec.desc(), seq_new.as_slice())?;
         }
     }

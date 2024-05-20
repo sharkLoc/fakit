@@ -1,11 +1,7 @@
-use anyhow::{Ok,Result};
+use anyhow::{Ok, Result};
 
 #[inline]
-pub fn wrap_fasta(
-    seq_slice: &[u8],
-    line_width: usize,
-) -> Result<Vec<u8>> {
-    
+pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>> {
     let seq_len = seq_slice.len();
     let mut seq_new: Vec<&[u8]> = vec![];
     let mut index = 0usize;
@@ -23,9 +19,11 @@ pub fn wrap_fasta(
             seq_new.push(window);
         }
         // line end
-        if index == seq_len { break; }
+        if index == seq_len {
+            break;
+        }
     }
     let seq_wrap = seq_new.concat();
-    
+
     Ok(seq_wrap)
 }

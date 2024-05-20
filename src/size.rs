@@ -44,11 +44,12 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
     } else {
         out.write_all(b"seq_name\tlength\n")?;
     }
-    let mut recs = fa_reader.records();
+    //let mut recs = fa_reader.records();
     let mut n = 0usize;
-    while let Some(each) = recs.next() {
+    //while let Some(each) = recs.next() {
+    for rec in fa_reader.records().flatten() {
         n += 1;
-        let rec = each?;
+        //let rec = each?;
         if all {
             let mut info = Seqinfo::new();
             let mut pos = 0usize;

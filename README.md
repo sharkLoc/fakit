@@ -60,20 +60,20 @@ Commands:
   codon    show codon table and amino acid name
   help     Print this message or the help of the given subcommand(s)
 
-Options:
-  -h, --help     Print help
-  -V, --version  Print version
-
 Global Arguments:
   -w, --line-width <int>      line width when outputting fasta sequences, 0 for no wrap [default: 70]
-      --compress-level <int>  set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file, just work with option -o/--out [default: 6]
+      --compress-level <int>  set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file, just work with
+                              option -o/--out [default: 6]
       --log <str>             if file name specified, write log message to this file, or write to stderr
-  -v, --verbosity <str>       control verbosity of logging, possible values: {error, warn, info, debug, trace} [default: debug]
+  -v, --verbosity...          control verbosity of logging, [-v: Error, -vv: Warn, -vvv: Info, -vvvv: Debug, -vvvvv: Trace, defalut: Debug]
 
 Global FLAGS:
-  -q, --quiet  be quiet and do not show extra information
+  -q, --quiet    be quiet and do not show extra information
+  -h, --help     prints help information
+  -V, --version  prints version information
 
 Use "fakit help [command]" for more information about a command
+
 ```
 
 <br>

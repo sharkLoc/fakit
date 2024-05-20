@@ -6,6 +6,7 @@ use log::*;
 use regex::RegexBuilder;
 use std::{path::Path, time::Instant};
 
+#[allow(clippy::too_many_arguments)]
 pub fn grep_fasta<P: AsRef<Path> + Copy>(
     file: Option<P>,
     out: Option<P>,
@@ -55,7 +56,7 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
         let fp = file_reader(file).map(fasta::Reader::new)?;
         for rec in fp.records().flatten() {
             let seq_str = std::str::from_utf8(rec.seq())?;
-            if let Some(_) = re.captures(seq_str) {
+            if re.captures(seq_str).is_some() {
                 n += 1;
                 let seq_new = wrap_fasta(rec.seq(), line_width)?;
                 fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;
@@ -70,7 +71,7 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
             } else {
                 rec.id().to_owned()
             };
-            if let Some(_) = re.captures(&name) {
+            if re.captures(&name).is_some() {
                 n += 1;
                 let seq_new = wrap_fasta(rec.seq(), line_width)?;
                 fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;

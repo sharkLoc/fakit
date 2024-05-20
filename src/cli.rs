@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser,value_parser};
+use clap::{value_parser, ArgAction, Parser};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -10,6 +10,9 @@ use clap::{Parser,value_parser};
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
+    disable_help_flag = true,
+    disable_version_flag = true,
+    propagate_version = true,
     before_help = r"Fakit supports reading and writing gzip (.gz) format.
 Bzip2 (.bz2) and xz (.xz) format is supported since v0.3.0.
 Under the same compression level, xz has the highest compression ratio but consumes more time.
@@ -29,30 +32,39 @@ pub struct Args {
     #[clap(subcommand)]
     pub command: Subcli,
     /// line width when outputting fasta sequences, 0 for no wrap
-    #[arg(short = 'w', long = "line-width", default_value_t = 70,
-        global = true, value_name = "int",
+    #[arg(short = 'w', long = "line-width", default_value_t = 70, global = true, value_name = "int",
         help_heading = Some("Global Arguments")
     )]
     pub width: usize,
+
     /// set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file,
     /// just work with option -o/--out
-    #[arg(long = "compress-level", default_value_t = 6, global = true,
-        value_parser = value_parser!(u32).range(1..=9), value_name = "int",
+    #[arg(long = "compress-level", default_value_t = 6, global = true, value_parser = value_parser!(u32).range(1..=9), value_name = "int",
         help_heading = Some("Global Arguments")
     )]
     pub compression_level: u32,
+
     /// if file name specified, write log message to this file, or write to stderr
     #[arg(long = "log", global = true, help_heading = Some("Global Arguments"), value_name = "str")]
     pub logfile: Option<String>,
-    /// control verbosity of logging, possible values: {error, warn, info, debug, trace}
-    #[arg(short = 'v', long = "verbosity", global = true, value_name = "str",
-        default_value_t = String::from("debug"),
-        help_heading = Some("Global Arguments")
+
+    /// control verbosity of logging, [-v: Error, -vv: Warn, -vvv: Info, -vvvv: Debug, -vvvvv: Trace, defalut: Debug]
+    #[arg(short = 'v', long = "verbosity", action = ArgAction::Count, global = true,
+        default_value_t = 4, help_heading = Some("Global Arguments")
     )]
-    pub verbose: String,
+    pub verbose: u8,
+
     /// be quiet and do not show extra information
     #[arg(short = 'q', long = "quiet", global= true, help_heading = Some("Global FLAGS"))]
     pub quiet: bool,
+
+    /// prints help information
+    #[arg(short = 'h', long, action = ArgAction::Help, global= true, help_heading = Some("Global FLAGS"))]
+    pub help: Option<String>,
+
+    /// prints version information
+    #[arg(short = 'V', long, action = ArgAction::Version, global= true, help_heading = Some("Global FLAGS"))]
+    pub version: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -95,7 +107,7 @@ pub enum Subcli {
         output: Option<String>,
     },
     /// create index and random access to fasta files
-    #[command(visible_alias="fai")]
+    #[command(visible_alias = "fai")]
     faidx {
         /// input uncompressed fasta file
         input: Option<String>,
@@ -103,7 +115,7 @@ pub enum Subcli {
         /// usage:  fakit faidx seq.fa chr1:1-5000 chr2:100-800 ...
         #[arg(verbatim_doc_comment)]
         region: Option<Vec<String>>,
-    }, 
+    },
     /// flatten fasta sequences
     #[command(visible_alias = "flat")]
     flatten {
@@ -129,7 +141,6 @@ pub enum Subcli {
         /// fasta output file name or write to stdout, files ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
-
     },
     /// rename sequence id in fasta file
     rename {
@@ -137,7 +148,7 @@ pub enum Subcli {
         input: Option<String>,
         /// if specified, keep sequence id description
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
-        keep: bool, 
+        keep: bool,
         /// set new id prefix for sequence
         #[arg(short = 'p', long = "prefix", value_name = "str")]
         prefix: Option<String>,
@@ -163,26 +174,41 @@ pub enum Subcli {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// set sliding window size
-        #[arg(short = 'W', long = "window-size", default_value_t = 500, value_name = "int")]
+        #[arg(
+            short = 'W',
+            long = "window-size",
+            default_value_t = 500,
+            value_name = "int"
+        )]
         wind: usize,
         /// set sliding window step size
-        #[arg(short= 's', long = "step-size", default_value_t = 100, value_name = "int")]
+        #[arg(
+            short = 's',
+            long = "step-size",
+            default_value_t = 100,
+            value_name = "int"
+        )]
         step: usize,
         /// if specified, keep fasta format in output result
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool,
         /// output result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         ///header format: seqid    start   end gc_rate sequence
-        #[arg(short = 'o', long = "out",verbatim_doc_comment, value_name = "str")]
+        #[arg(short = 'o', long = "out", verbatim_doc_comment, value_name = "str")]
         output: Option<String>,
-    }, 
+    },
     /// grep fasta sequences by name/seq
     grep {
         /// input fasta file, or read from stdin
         input: Option<String>,
         /// specify regex pattern/motif, e.g., -p "ATC{2,}" or -p ATCCG, search multiple pattern/motif, -p "ATCCG|GCTAA"
         /// when searching by sequence name, the sequence prefix ">" is not included in the header.
-        #[arg(short = 'p', long = "pattern",verbatim_doc_comment, value_name = "str")]
+        #[arg(
+            short = 'p',
+            long = "pattern",
+            verbatim_doc_comment,
+            value_name = "str"
+        )]
         pat: String,
         /// grep sequences by full name
         #[arg(short = 'n', long = "by-name", help_heading = Some("FLAGS"))]
@@ -194,7 +220,7 @@ pub enum Subcli {
         #[arg(short = 'i', long = "ignore-case", help_heading = Some("FLAGS"))]
         ignore: bool,
         /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out", value_name = "str" )]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
     /// convert all bases to lower/upper case, filter by length
@@ -253,13 +279,18 @@ pub enum Subcli {
         input: Option<String>,
         /// specify uppercase pattern/motif, e.g., -p "ATC{2,}" or -p ATCCG
         ///search multiple pattern/motif, -p "ATCCG|GCTAA"
-        #[arg(short = 'p', long = "pattern",verbatim_doc_comment, value_name = "str")]
+        #[arg(
+            short = 'p',
+            long = "pattern",
+            verbatim_doc_comment,
+            value_name = "str"
+        )]
         pat: String,
         /// if specified, show header in result
         #[arg(short = 'H', long = "header", help_heading = Some("FLAGS"))]
         Header: bool,
         /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
-        #[arg(short = 'o', long = "out", value_name = "str" )]
+        #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
     /// shuffle fasta sequences
@@ -301,7 +332,7 @@ pub enum Subcli {
         /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
-    }, 
+    },
     /// split fasta file by sequence id
     #[command(before_help = "note: each sequence results in a separate file")]
     split {
@@ -349,7 +380,7 @@ pub enum Subcli {
     /// show codon table and amino acid name
     codon {
         /// amino acid short name eg. S
-        #[arg(short='n', long="name", value_name = "str")]
+        #[arg(short = 'n', long = "name", value_name = "str")]
         name: Option<String>,
-    }
+    },
 }

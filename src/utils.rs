@@ -24,14 +24,22 @@ fn is_gzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
     let buffer = magic_num(file_name)?;
     let gz_or_not =
         buffer[0] == GZ_MAGIC[0] && buffer[1] == GZ_MAGIC[1] && buffer[2] == GZ_MAGIC[2];
-    Ok(gz_or_not || file_name.as_ref().extension().is_some_and(|ext| ext == "gz"))
+    Ok(gz_or_not
+        || file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "gz"))
 }
 
 fn is_bzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
     let buffer = magic_num(file_name)?;
     let bz_or_not =
         buffer[0] == BZ_MAGIC[0] && buffer[1] == BZ_MAGIC[1] && buffer[2] == BZ_MAGIC[2];
-    Ok(bz_or_not || file_name.as_ref().extension().is_some_and(|ext| ext == "bz2"))
+    Ok(bz_or_not
+        || file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "bz2"))
 }
 
 fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
@@ -42,12 +50,16 @@ fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
         && buffer[3] == XZ_MAGIC[3]
         && buffer[4] == XZ_MAGIC[4]
         && buffer[5] == XZ_MAGIC[5];
-    Ok(xz_or_not || file_name.as_ref().extension().is_some_and(|ext| ext == "xz"))
+    Ok(xz_or_not
+        || file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "xz"))
 }
 
-pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>> 
-where 
-    P: AsRef<Path> + Copy
+pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>>
+where
+    P: AsRef<Path> + Copy,
 {
     if let Some(file_name) = file_in {
         let fp = File::open(file_name)?;
@@ -74,7 +86,7 @@ where
             Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp)))
         }
     } else {
-        if atty::is(atty::Stream::Stdin) { 
+        if atty::is(atty::Stream::Stdin) {
             error!("stdin not detected");
             std::process::exit(1);
         }
@@ -85,21 +97,33 @@ where
 
 pub fn file_writer<P>(file_out: Option<P>, compression_level: u32) -> Result<Box<dyn Write>>
 where
-    P: AsRef<Path> + Copy
+    P: AsRef<Path> + Copy,
 {
     if let Some(file_name) = file_out {
         let fp = File::create(file_name)?;
-        if file_name.as_ref().extension().is_some_and(|ext| ext == "gz") {
+        if file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "gz")
+        {
             Ok(Box::new(BufWriter::with_capacity(
                 BUFF_SIZE,
                 flate2::write::GzEncoder::new(fp, flate2::Compression::new(compression_level)),
             )))
-        } else if file_name.as_ref().extension().is_some_and(|ext| ext == "bz2") {
+        } else if file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "bz2")
+        {
             Ok(Box::new(BufWriter::with_capacity(
                 BUFF_SIZE,
                 bzip2::write::BzEncoder::new(fp, bzip2::Compression::new(compression_level)),
             )))
-        } else if file_name.as_ref().extension().is_some_and(|ext| ext == "xz") {
+        } else if file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "xz")
+        {
             Ok(Box::new(BufWriter::with_capacity(
                 BUFF_SIZE,
                 xz2::write::XzEncoder::new(fp, compression_level),
@@ -109,5 +133,25 @@ where
         }
     } else {
         Ok(Box::new(BufWriter::new(io::stdout())))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gz_or_not() {
+        assert_eq!(is_gzipped("example/uniques.fa.gz").unwrap(), true);
+    }
+
+    #[test]
+    fn xz_or_not() {
+        assert_eq!(is_xz("example/uniques.fa.xz").unwrap(), true);
+    }
+
+    #[test]
+    fn bzip2_or_not() {
+        assert_eq!(is_bzipped("example/uniques.fa.bz2").unwrap(), true);
     }
 }

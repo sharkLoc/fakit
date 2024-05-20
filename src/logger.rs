@@ -8,21 +8,20 @@ use std::{
     path::Path,
 };
 
-
 pub fn logger<P: AsRef<Path>>(
-    verbose: String,
+    verbose: u8,
     logfile: Option<P>,
     quiet: bool,
 ) -> Result<(), anyhow::Error> {
-    let mut level = if verbose == "error".to_string() {
+    let mut level = if verbose == 1 {
         LevelFilter::Error
-    } else if verbose == "warn".to_string() {
+    } else if verbose == 2 {
         LevelFilter::Warn
-    } else if verbose == "info".to_string() {
+    } else if verbose == 3 {
         LevelFilter::Info
-    } else if verbose == "debug".to_string() {
+    } else if verbose == 4 {
         LevelFilter::Debug
-    } else if verbose == "trace".to_string() {
+    } else if verbose == 5 {
         LevelFilter::Trace
     } else {
         LevelFilter::Off

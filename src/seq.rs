@@ -5,6 +5,7 @@ use bio::io::fasta;
 use log::*;
 use std::{path::Path, time::Instant};
 
+#[allow(clippy::too_many_arguments)]
 pub fn seq_fa<P: AsRef<Path> + Copy>(
     input: Option<P>,
     lower: bool,

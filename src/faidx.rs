@@ -5,8 +5,10 @@ use log::*;
 use std::collections::BTreeMap;
 use std::{io::BufRead, path::Path, time::Instant};
 
-
-pub fn index_fasta<P: AsRef<Path> + Copy>(name: Option<P>, compression_level: u32) -> Result<(), Error> {
+pub fn index_fasta<P: AsRef<Path> + Copy>(
+    name: Option<P>,
+    compression_level: u32,
+) -> Result<(), Error> {
     let start = Instant::now();
     if let Some(name) = name {
         info!("crate faidx for file: {:?}", name.as_ref());
@@ -24,7 +26,7 @@ pub fn index_fasta<P: AsRef<Path> + Copy>(name: Option<P>, compression_level: u3
     let (mut dist, mut total_len, mut order) = (0, 0, 0usize);
     let mut once = 0;
 
-    for line in fp.lines().flatten() {
+    for line in fp.lines().map_while(Result::ok) {
         order += 1;
         if line.starts_with('>') {
             let info = line.splitn(2, ' ').collect::<Vec<&str>>();
@@ -112,7 +114,7 @@ pub fn index_reader(name: &str, region: Vec<String>, compression_level: u32) -> 
                 n += 1;
                 print!("{}", x? as char);
                 if n == 70 {
-                    print!("\n");
+                    println!();
                     n = 0;
                 }
             }

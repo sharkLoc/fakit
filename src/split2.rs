@@ -6,6 +6,7 @@ use log::*;
 use std::path::Path;
 use std::time::Instant;
 
+#[allow(clippy::too_many_arguments)]
 pub fn split_chunk<P: AsRef<Path> + Copy>(
     file: Option<P>,
     num: usize,
