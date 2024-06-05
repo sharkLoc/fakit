@@ -1,8 +1,8 @@
 use crate::utils::*;
-use crate::wrap::*;
 use anyhow::Result;
-use bio::io::fasta;
-use log::*;
+use log::info;
+use noodles::fasta::io::{reader::Reader, writer};
+use std::io::BufReader;
 use std::path::Path;
 use std::time::Instant;
 
@@ -13,30 +13,30 @@ pub fn tail_n_records<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
+    let start = Instant::now();
+    let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
+
     if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
+        info!("reading from file: {}", file.as_ref().display());
     } else {
         info!("reading from stdin");
     }
     info!("get tail {} records", number);
-    let start = Instant::now();
 
-    let fp = fasta::Reader::new(file_reader(input)?);
-    let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
     let mut total = 0usize;
-
-    for _ in fp.records() {
+    for _ in rdr.records() {
         total += 1;
     }
     info!("total fasta sequences number: {}", total);
     let skip_n = total - number;
+    let mut wtr = writer::Builder::default()
+        .set_line_base_count(line_width)
+        .build_with_writer(file_writer(output, compression_level)?);
 
-    let fp2 = fasta::Reader::new(file_reader(input)?);
-    for rec in fp2.records().skip(skip_n).flatten() {
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        fo.write(rec.id(), rec.desc(), seq_new.as_slice())?;
+    let mut rdr2 = file_reader(input).map(BufReader::new).map(Reader::new)?;
+    for rec in rdr2.records().skip(skip_n).flatten() {
+        wtr.write_record(&rec)?;
     }
-    fo.flush()?;
 
     info!("time elapsed is: {:?}", start.elapsed());
     Ok(())

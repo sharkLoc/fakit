@@ -1,6 +1,6 @@
 use anyhow::Error;
 use colored::*;
-use log::*;
+use log::error;
 use std::collections::HashMap;
 
 pub fn show_codon(name: Option<String>) -> Result<(), Error> {

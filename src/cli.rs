@@ -1,12 +1,11 @@
-use std::path::PathBuf;
-
 use clap::{value_parser, ArgAction, Parser};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.6",
+    version = "0.4.0",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -115,6 +114,9 @@ pub enum Subcli {
         /// usage:  fakit faidx seq.fa chr1:1-5000 chr2:100-800 ...
         #[arg(verbatim_doc_comment)]
         region: Option<Vec<String>>,
+        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
+        output: Option<String>,
     },
     /// flatten fasta sequences
     #[command(visible_alias = "flat")]

@@ -1,6 +1,5 @@
 use anyhow::{Error, Ok};
 use clap::Parser;
-use log::error;
 
 mod cli;
 use cli::*;
@@ -84,7 +83,19 @@ fn main() -> Result<(), Error> {
                 args.compression_level,
             )?;
         }
-        Subcli::faidx { input, region } => {
+        Subcli::faidx {
+            input,
+            region,
+            output,
+        } => {
+            faidx_fasta(
+                input.as_ref(),
+                region,
+                output.as_ref(),
+                args.compression_level,
+            )?;
+        }
+        /*Subcli::faidx { input, region } => {
             if let Some(input) = input {
                 if let Some(region) = region {
                     index_reader(&input, region, args.compression_level)?;
@@ -95,7 +106,7 @@ fn main() -> Result<(), Error> {
                 error!("usage: fakit faidx -h/--help, get more help");
                 std::process::exit(1);
             }
-        }
+        }*/
         Subcli::flatten {
             input,
             keep,
