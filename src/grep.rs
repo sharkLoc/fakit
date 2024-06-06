@@ -18,6 +18,8 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), Error> {
     let start = Instant::now();
+    let mut fo = file_writer(out, compression_level).map(fasta::Writer::new)?;
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -49,8 +51,6 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
         .case_insensitive(case)
         .unicode(true)
         .build()?;
-
-    let mut fo = file_writer(out, compression_level).map(fasta::Writer::new)?;
 
     if by_seq {
         let fp = file_reader(file).map(fasta::Reader::new)?;

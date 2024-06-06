@@ -11,13 +11,13 @@ pub fn flatten_fa<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let reader = file_reader(file).map(fasta::Reader::new)?;
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
 
-    let reader = file_reader(file).map(fasta::Reader::new)?;
     let mut writer = file_writer(out, compression_level)?;
     let mut count = 0usize;
     for rec in reader.records().flatten() {

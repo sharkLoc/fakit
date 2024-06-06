@@ -49,17 +49,24 @@ impl Seqinfo {
     }
 }
 
-pub fn summary_fa<P: AsRef<Path> + Copy>(input: Vec<P>, all: bool) -> Result<(), Error> {
+pub fn summary_fa<P: AsRef<Path> + Copy>(
+    input: Vec<P>,
+    all: bool,
+    output: Option<P>,
+    compression_level: u32,
+) -> Result<(), Error> {
     if input.is_empty() {
         error!("usage: fakit  summ -h/--help, get more help");
         std::process::exit(1);
     }
     let start = Instant::now();
-
+    let mut fo = file_writer(output, compression_level)?;
     if all {
-        println!("file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len");
+        let header ="file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len";
+        fo.write_all(header.as_bytes())?;
     } else {
-        println!("file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len");
+        let header = "file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len";
+        fo.write_all(header.as_bytes())?;
     }
 
     for i in input {
@@ -120,7 +127,7 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(input: Vec<P>, all: bool) -> Result<(),
         info.mean();
         info.rate();
         if all {
-            println!(
+            let res = format!(
                 "{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:.2}\t{}\t{}\t{}\t{:.0}\t{}",
                 info.name,
                 info.count_a,
@@ -136,13 +143,16 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(input: Vec<P>, all: bool) -> Result<(),
                 info.mean_len,
                 info.max_len
             );
+            fo.write_all(res.as_bytes())?;
         } else {
-            println!(
+            let res = format!(
                 "{}\t{}\t{}\t{}\t{:.0}\t{}",
                 info.name, info.num_seq, info.sum_len, info.min_len, info.mean_len, info.max_len
             );
+            fo.write_all(res.as_bytes())?;
         }
     }
+    fo.flush()?;
 
     info!("time elapsed is: {:?}", start.elapsed());
     Ok(())

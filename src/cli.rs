@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.4.0",
+    version = "0.3.7",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -378,6 +378,9 @@ pub enum Subcli {
         /// if specified, show more information
         #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
         all: bool,
+        /// output summary file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
+        output: Option<String>,
     },
     /// show codon table and amino acid name
     codon {

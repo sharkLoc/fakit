@@ -16,6 +16,8 @@ pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fa_reader = file_reader(file).map(fasta::Reader::new)?;
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -24,7 +26,6 @@ pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     info!("rand seed: {}", seed);
 
     let mut rng = Pcg64::seed_from_u64(seed);
-    let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     let mut vec_reads = vec![];
     for rec in fa_reader.records().flatten() {

@@ -15,13 +15,14 @@ pub fn split_fa<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fp = fasta::Reader::new(file_reader(input)?);
+
     if let Some(input) = input {
         info!("reading form file: {:?}", input.as_ref());
     } else {
         info!("reading form stdin");
     }
 
-    let fp = fasta::Reader::new(file_reader(input)?);
     for rec in fp.records().flatten() {
         let path = if let Some(outdir) = &outdir {
             outdir.as_ref().join(format!("{}.{}", rec.id(), ext))

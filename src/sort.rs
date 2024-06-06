@@ -19,6 +19,8 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), Error> {
     let start = Instant::now();
+    let fa_reader = file_reader(file).map(fasta::Reader::new)?;
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -46,8 +48,6 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
         error!("please specifiy one of the flags: -l, -n, -g, -s");
         std::process::exit(1);
     }
-
-    let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     let mut vec_reads = vec![];
     for rec in fa_reader.records().flatten() {

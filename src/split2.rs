@@ -18,6 +18,8 @@ pub fn split_chunk<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), Error> {
     let start = Instant::now();
+    let fa_reader = fasta::Reader::new(file_reader(file)?);
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -53,7 +55,6 @@ pub fn split_chunk<P: AsRef<Path> + Copy>(
         //PathBuf::from("./").join(format!("{}{}.fasta", out_pre, index))
     };
 
-    let fa_reader = fasta::Reader::new(file_reader(file)?);
     let mut fh = vec![fasta::Writer::new(file_writer(
         Some(&out),
         compression_level,

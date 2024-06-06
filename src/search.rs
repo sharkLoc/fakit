@@ -13,6 +13,8 @@ pub fn search_fa<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), Error> {
     let start = Instant::now();
+    let fp = file_reader(file).map(fasta::Reader::new)?;
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -21,7 +23,6 @@ pub fn search_fa<P: AsRef<Path> + Copy>(
     info!("regex pattern is: {}", pat);
 
     let re = Regex::new(pat)?;
-    let fp = file_reader(file).map(fasta::Reader::new)?;
     let mut fo = file_writer(out, compression_level)?;
     if header {
         fo.write_all("sequence_name\tstart\tend\tpattern\tlength\tsequence\n".as_bytes())?;

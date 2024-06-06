@@ -12,11 +12,14 @@ pub fn silding_window<P: AsRef<Path> + Copy>(
     keep: bool,
     compression_level: u32,
 ) -> Result<(), Error> {
+    let start = Instant::now();
+    let fp = fasta::Reader::new(file_reader(file)?);
+
     if step == 0 {
         error!("step size can't be 0");
         std::process::exit(1);
     }
-    let start = Instant::now();
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -25,7 +28,6 @@ pub fn silding_window<P: AsRef<Path> + Copy>(
     info!("window size : {}", wind);
     info!("step size: {}", step);
 
-    let fp = fasta::Reader::new(file_reader(file)?);
     let mut fo = file_writer(out, compression_level)?;
     let mut windows = wind;
     for rec in fp.records().flatten() {

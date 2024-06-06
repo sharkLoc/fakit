@@ -17,20 +17,20 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     if let Some(file) = input {
         let fai = format!("{}.fai", file.as_ref().display());
         if PathBuf::from(fai.clone()).exists() {
-            warn!("fasta index file is exists");
-            if let Some(regs) =  region {
+            info!("fasta index file is exists");
+            if let Some(regs) = region {
                 let mut fa_index_reader =
                     indexed_reader::Builder::default().build_from_path(file)?;
                 let mut wtr = file_writer(output, compression_level).map(fasta::Writer::new)?;
-    
+
                 for reg in regs {
                     let info = reg.split(':').collect::<Vec<&str>>();
                     let pos = info[1].split('-').collect::<Vec<&str>>();
                     info!(
-                        "parse region {}, id: {}, start: {}, end: {}",
+                        "parse region {}; id: {}, start: {}, end: {}",
                         reg, info[0], pos[0], pos[1]
                     );
-    
+
                     let start = Position::try_from(pos[0].parse::<usize>()?)?;
                     let end = Position::try_from(pos[1].parse::<usize>()?)?;
                     let reg_new = Region::new(info[0], Interval::from(start..=end));
@@ -40,8 +40,13 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
             }
             std::process::exit(1);
         }
-        
-        // faidx not exists 
+
+        if region.is_some() {
+            warn!("index fasta file first and rerun command");
+            std::process::exit(1);
+        }
+
+        // faidx not exists
         info!("create index file for: {}", file.as_ref().display());
         let fai_wtr = file_writer(Some(&fai), 0u32)?;
         // create index for fasta
@@ -50,8 +55,10 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
         faidx_wtr.write_index(&index)?;
         info!("index done, write index file to: {}", fai);
 
+        // index fasta file and fetch seq at a time, faidx_wtr have not flush method, report a error
         // parse region
-        if let Some(regs) =  region {
+        /*if let Some(regs) =  region {
+            //let rdr = std::io::BufReader::new(std::fs::File::open(file)?);
             let mut fa_index_reader =
                 indexed_reader::Builder::default().build_from_path(file)?;
             let mut wtr = file_writer(output, compression_level).map(fasta::Writer::new)?;
@@ -70,7 +77,7 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
                 let target = fa_index_reader.query(&reg_new)?;
                 wtr.write_record(&target)?;
             }
-        }
+        }*/
     } else {
         error!("use opt -h get more help information");
         std::process::exit(1);

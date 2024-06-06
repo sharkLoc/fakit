@@ -18,6 +18,8 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fa_reader = fasta::Reader::new(file_reader(file)?);
+
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -29,7 +31,6 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut get: Vec<usize> = Vec::with_capacity(n);
 
-    let fa_reader = fasta::Reader::new(file_reader(file)?);
     for (order, _) in fa_reader.records().flatten().enumerate() {
         if order < n {
             get.push(order);

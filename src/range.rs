@@ -15,6 +15,8 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fp_reader = file_reader(input).map(fasta::Reader::new)?;
+
     if let Some(file) = input {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -23,7 +25,6 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     info!("skip first {} records", skip);
     info!("get {} records", take);
 
-    let fp_reader = file_reader(input).map(fasta::Reader::new)?;
     let mut fp_writer = file_writer(output, compression_level).map(fasta::Writer::new)?;
     let mut count = 0usize;
     for rec in fp_reader.records().skip(skip).take(take).flatten() {

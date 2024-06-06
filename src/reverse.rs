@@ -13,6 +13,8 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fa_reader = file_reader(input).map(fasta::Reader::new)?;
+
     if let Some(file) = input {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -31,7 +33,7 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
         (b'c', b'g'),
         (b'n', b'n'),
     ]);
-    let fa_reader = file_reader(input).map(fasta::Reader::new)?;
+
     let mut out_writer = file_writer(out, compression_level).map(fasta::Writer::new)?;
 
     for rec in fa_reader.records().flatten() {

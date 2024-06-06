@@ -290,9 +290,13 @@ fn main() -> Result<(), Error> {
                 )?;
             }
         }
-        Subcli::summ { file, all } => {
+        Subcli::summ { file, all, output } => {
             let buf = file.iter().map(|x| x.as_str()).collect();
-            summary_fa(buf, all)?;
+            if let Some(path) = output {
+                summary_fa(buf, all, Some(&path), args.compression_level)?;
+            } else {
+                summary_fa(buf, all, None, args.compression_level)?;
+            }
         }
         Subcli::split { input, ext, outdir } => {
             split_fa(

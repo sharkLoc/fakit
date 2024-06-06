@@ -15,13 +15,14 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<()> {
     let start = Instant::now();
+    let fp = fasta::Reader::new(file_reader(input)?);
+
     if let Some(file) = input {
         info!("reading from file: {:?}", file.as_ref());
     } else {
         info!("reading from stdin");
     }
 
-    let fp = fasta::Reader::new(file_reader(input)?);
     let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
     let mut n: usize = 0;
 
