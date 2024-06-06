@@ -85,7 +85,7 @@ pub enum Subcli {
     /// get last N records from fasta file
     #[command(before_help = "note: the command need to read file twice, do not use in stream")]
     tail {
-        /// input fasta file, or read from stdin
+        /// input fasta file
         input: Option<String>,
         /// print last N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
