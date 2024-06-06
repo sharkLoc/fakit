@@ -62,10 +62,10 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
     let start = Instant::now();
     let mut fo = file_writer(output, compression_level)?;
     if all {
-        let header ="file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len";
+        let header ="file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
         fo.write_all(header.as_bytes())?;
     } else {
-        let header = "file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len";
+        let header = "file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
         fo.write_all(header.as_bytes())?;
     }
 
@@ -128,7 +128,7 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
         info.rate();
         if all {
             let res = format!(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:.2}\t{}\t{}\t{}\t{:.0}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:.2}\t{}\t{}\t{}\t{:.0}\t{}\n",
                 info.name,
                 info.count_a,
                 info.count_c,
@@ -146,7 +146,7 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
             fo.write_all(res.as_bytes())?;
         } else {
             let res = format!(
-                "{}\t{}\t{}\t{}\t{:.0}\t{}",
+                "{}\t{}\t{}\t{}\t{:.0}\t{}\n",
                 info.name, info.num_seq, info.sum_len, info.min_len, info.mean_len, info.max_len
             );
             fo.write_all(res.as_bytes())?;
