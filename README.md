@@ -19,7 +19,7 @@ cargo install fakit
 ```bash
 Fakit: A simple program for fasta file manipulation
 
-Version: 0.3.7
+Version: 0.3.8
 
 Authors: sharkLoc <mmtinfo@163.com>
 Source code: https://github.com/sharkLoc/fakit.git
@@ -51,6 +51,7 @@ Commands:
   seq      convert all bases to lower/upper case, filter by length
   sort     sort fasta file by name/seq/gc/length
   search   search subsequences/motifs from fasta file
+  kmer     a simple kmer counter
   shuffle  shuffle fasta sequences
   size     report fasta sequence base count
   subfa    subsample sequences from big fasta file

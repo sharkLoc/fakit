@@ -43,6 +43,8 @@ mod summ;
 use summ::*;
 mod size;
 use size::*;
+mod kmer;
+use kmer::*;
 mod codon;
 mod wrap;
 use codon::*;
@@ -95,18 +97,20 @@ fn main() -> Result<(), Error> {
                 args.compression_level,
             )?;
         }
-        /*Subcli::faidx { input, region } => {
-            if let Some(input) = input {
-                if let Some(region) = region {
-                    index_reader(&input, region, args.compression_level)?;
-                } else {
-                    index_fasta(Some(&input), args.compression_level)?;
-                }
-            } else {
-                error!("usage: fakit faidx -h/--help, get more help");
-                std::process::exit(1);
-            }
-        }*/
+        Subcli::kmer {
+            input,
+            size,
+            header,
+            out,
+        } => {
+            kmer_count(
+                input.as_ref(),
+                size,
+                header,
+                out.as_ref(),
+                args.compression_level,
+            )?;
+        }
         Subcli::flatten {
             input,
             keep,

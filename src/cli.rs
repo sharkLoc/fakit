@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.7",
+    version = "0.3.8",
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,
@@ -294,6 +294,25 @@ pub enum Subcli {
         /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
+    },
+    /// a simple kmer counter
+    kmer {
+        /// input fasta file, or read from stdin
+        input: Option<String>,
+        /// set kmer size
+        #[arg(
+            short = 'k',
+            long = "kmer-size",
+            default_value_t = 21,
+            value_name = "int"
+        )]
+        size: usize,
+        /// add header info in output file
+        #[arg(short = 'H', long, help_heading = Some("FLAGS"))]
+        header: bool,
+        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        #[arg(short = 'o', long = "out", value_name = "str")]
+        out: Option<String>,
     },
     /// shuffle fasta sequences
     #[command(before_help = "note: all records will be readed into memory")]

@@ -500,7 +500,7 @@ dependencies = [
 
 [[package]]
 name = "fakit"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "anyhow",
  "atty",
@@ -514,6 +514,7 @@ dependencies = [
  "log",
  "noodles",
  "noodles-fastq",
+ "nthash",
  "rand",
  "rand_pcg",
  "regex",
@@ -946,6 +947,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc408c8c4ce6806d2ebadef2fa2fe20f32ec98769f035d637564d6f2d08b7769"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "nthash"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "752ed59e65983a1ba3166fcdf684107b9f43913a937d3250aa98f26ce586c2d0"
+dependencies = [
+ "thiserror",
 ]
 
 [[package]]
