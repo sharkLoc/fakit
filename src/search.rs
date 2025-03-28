@@ -3,7 +3,7 @@ use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use regex::Regex;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 pub fn search_fa<P: AsRef<Path> + Copy>(
     file: Option<P>,
@@ -12,7 +12,7 @@ pub fn search_fa<P: AsRef<Path> + Copy>(
     header: bool,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
+   
     let fp = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {
@@ -52,6 +52,5 @@ pub fn search_fa<P: AsRef<Path> + Copy>(
     }
     fo.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

@@ -6,7 +6,6 @@ use log::*;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use std::path::Path;
-use std::time::Instant;
 
 pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     file: Option<P>,
@@ -15,7 +14,7 @@ pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+    
     let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {
@@ -44,6 +43,5 @@ pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     }
     fa_writer.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

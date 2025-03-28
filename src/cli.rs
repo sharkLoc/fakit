@@ -1,11 +1,13 @@
 use clap::{value_parser, ArgAction, Parser};
 use std::path::PathBuf;
 
+pub const VERSION: &str = "0.3.9";
+
 #[derive(Parser, Debug)]
 #[command(
     name = "Fakit",
     author = "sharkLoc",
-    version = "0.3.8",
+    version = VERSION,
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,

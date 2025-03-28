@@ -2,7 +2,7 @@ use crate::utils::*;
 use anyhow::Result;
 use bio::io::fasta;
 use log::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 pub fn flatten_fa<P: AsRef<Path> + Copy>(
     file: Option<P>,
@@ -10,7 +10,7 @@ pub fn flatten_fa<P: AsRef<Path> + Copy>(
     keep: bool,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+
     let reader = file_reader(file).map(fasta::Reader::new)?;
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
@@ -45,6 +45,5 @@ pub fn flatten_fa<P: AsRef<Path> + Copy>(
     writer.flush()?;
 
     info!("strip sequence number: {}", count);
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

@@ -2,7 +2,7 @@ use crate::utils::{file_reader, file_writer};
 use anyhow::{Error, Result};
 use log::info;
 use noodles::fasta::io::{reader::Reader, writer};
-use std::{io::BufReader, path::Path, time::Instant};
+use std::{io::BufReader, path::Path};
 
 pub fn top_n_records<P: AsRef<Path> + Copy>(
     number: usize,
@@ -11,7 +11,6 @@ pub fn top_n_records<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
     let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
 
     if let Some(file) = input {
@@ -23,12 +22,11 @@ pub fn top_n_records<P: AsRef<Path> + Copy>(
 
     let mut wtr = writer::Builder::default()
         .set_line_base_count(line_width)
-        .build_with_writer(file_writer(output, compression_level)?);
+        .build_from_writer(file_writer(output, compression_level)?);
 
     for rec in rdr.records().take(number).flatten() {
         wtr.write_record(&rec)?;
     }
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

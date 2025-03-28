@@ -5,7 +5,6 @@ use bio::io::fasta::{self, Record};
 use log::*;
 use std::path::Path;
 use std::path::PathBuf;
-use std::time::Instant;
 
 pub fn split_fa<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -14,7 +13,6 @@ pub fn split_fa<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
     let fp = fasta::Reader::new(file_reader(input)?);
 
     if let Some(input) = input {
@@ -38,6 +36,5 @@ pub fn split_fa<P: AsRef<Path> + Copy>(
         fo.flush()?;
     }
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

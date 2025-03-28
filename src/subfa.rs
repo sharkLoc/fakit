@@ -6,7 +6,6 @@ use log::*;
 use rand::{prelude::*, Rng};
 use rand_pcg::Pcg64;
 use std::path::Path;
-use std::time::Instant;
 
 // reduce much memory but cost more time
 pub fn select_fasta<P: AsRef<Path> + Copy>(
@@ -17,7 +16,6 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
     let fa_reader = fasta::Reader::new(file_reader(file)?);
 
     if let Some(file) = file {
@@ -35,7 +33,7 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
         if order < n {
             get.push(order);
         } else {
-            let ret = rng.gen_range(0..=order);
+            let ret = rng.random_range(0..=order);
             if ret < n {
                 get[ret] = order;
             }
@@ -53,7 +51,6 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
     }
     w.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }
 
@@ -66,7 +63,6 @@ pub fn select_fasta2<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {
@@ -83,7 +79,7 @@ pub fn select_fasta2<P: AsRef<Path> + Copy>(
         if order < n {
             get.push(rec);
         } else {
-            let ret = rng.gen_range(0..=order);
+            let ret = rng.random_range(0..=order);
             if ret < n {
                 get[ret] = rec;
             }
@@ -98,6 +94,5 @@ pub fn select_fasta2<P: AsRef<Path> + Copy>(
     }
     w.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

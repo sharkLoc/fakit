@@ -2,7 +2,7 @@ use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
 use log::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 pub fn silding_window<P: AsRef<Path> + Copy>(
     step: usize,
@@ -12,7 +12,6 @@ pub fn silding_window<P: AsRef<Path> + Copy>(
     keep: bool,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
     let fp = fasta::Reader::new(file_reader(file)?);
 
     if step == 0 {
@@ -94,6 +93,5 @@ pub fn silding_window<P: AsRef<Path> + Copy>(
     }
     fo.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

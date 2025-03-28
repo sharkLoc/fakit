@@ -4,7 +4,6 @@ use anyhow::{Error, Ok};
 use bio::io::fasta::{self, Record};
 use log::*;
 use std::path::Path;
-use std::time::Instant;
 
 #[allow(clippy::useless_format, clippy::too_many_arguments)]
 pub fn sort_fasta<P: AsRef<Path> + Copy>(
@@ -18,7 +17,6 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
     let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {
@@ -151,7 +149,6 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     if reverse {
         info!("output reversed result");
     }
-    info!("time elapsed is: {:?}", start.elapsed());
 
     Ok(())
 }

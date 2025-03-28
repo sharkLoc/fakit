@@ -4,7 +4,7 @@ use log::{error, info, warn};
 use noodles::core::{position::Position, region::interval::Interval, Region};
 use noodles::fasta::{self, fai, index, indexed_reader};
 use std::path::PathBuf;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -12,7 +12,6 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     output: Option<P>,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
 
     if let Some(file) = input {
         let fai = format!("{}.fai", file.as_ref().display());
@@ -82,6 +81,6 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
         error!("use opt -h get more help information");
         std::process::exit(1);
     }
-    info!("time elapsed is: {:?}", start.elapsed());
+
     Ok(())
 }

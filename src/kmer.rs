@@ -3,7 +3,7 @@ use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use nthash::nthash;
-use std::{collections::HashMap, time::Instant};
+use std::collections::HashMap;
 
 pub fn kmer_count(
     input: Option<&String>,
@@ -12,7 +12,7 @@ pub fn kmer_count(
     output: Option<&String>,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
+    
     let reader = file_reader(input).map(fasta::Reader::new)?;
     if let Some(file) = input {
         info!("reading from file: {}", file);
@@ -47,6 +47,6 @@ pub fn kmer_count(
         writer.write_all(format!("\t{}\n", v).as_bytes())?;
     }
     writer.flush()?;
-    info!("time elapsed is: {:?}", start.elapsed());
+    
     Ok(())
 }

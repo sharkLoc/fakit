@@ -4,7 +4,7 @@ use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use regex::RegexBuilder;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 #[allow(clippy::too_many_arguments)]
 pub fn grep_fasta<P: AsRef<Path> + Copy>(
@@ -17,7 +17,7 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
+
     let mut fo = file_writer(out, compression_level).map(fasta::Writer::new)?;
 
     if let Some(file) = file {
@@ -79,7 +79,7 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
         }
     }
     fo.flush()?;
+
     info!("total match sequences number: {}", n);
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

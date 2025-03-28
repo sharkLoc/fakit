@@ -3,7 +3,7 @@ use anyhow::Result;
 use log::info;
 use noodles::fasta::io::reader::Reader;
 use noodles::fastq::{io::Writer, record::Definition, Record};
-use std::{io::BufReader, path::Path, time::Instant};
+use std::{io::BufReader, path::Path};
 
 pub fn fake_quality<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -11,7 +11,6 @@ pub fn fake_quality<P: AsRef<Path> + Copy>(
     out: Option<P>,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
     let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
 
     if let Some(file) = input {
@@ -34,6 +33,5 @@ pub fn fake_quality<P: AsRef<Path> + Copy>(
         wtr.write_record(&rec_new)?;
     }
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

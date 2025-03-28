@@ -4,7 +4,6 @@ use anyhow::Result;
 use bio::io::fasta::{self, Record};
 use log::*;
 use std::path::Path;
-use std::time::Instant;
 
 pub fn rename_fa<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -14,7 +13,7 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+    
     let fp = fasta::Reader::new(file_reader(input)?);
 
     if let Some(file) = input {
@@ -53,6 +52,5 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
         fo.flush()?;
     }
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

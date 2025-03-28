@@ -4,7 +4,6 @@ use anyhow::{Error, Ok};
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
-use std::time::Instant;
 
 #[allow(clippy::too_many_arguments)]
 pub fn split_chunk<P: AsRef<Path> + Copy>(
@@ -17,7 +16,6 @@ pub fn split_chunk<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
     let fa_reader = fasta::Reader::new(file_reader(file)?);
 
     if let Some(file) = file {
@@ -91,6 +89,5 @@ pub fn split_chunk<P: AsRef<Path> + Copy>(
     }
 
     info!("total chunk number is: {}", index + 1);
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

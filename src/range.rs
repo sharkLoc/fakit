@@ -4,7 +4,6 @@ use anyhow::Result;
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
-use std::time::Instant;
 
 pub fn range_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -14,7 +13,7 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+    
     let fp_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {
@@ -34,6 +33,6 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     }
     fp_writer.flush()?;
     info!("total get sequence number: {}", count);
-    info!("time elapsed is: {:?}", start.elapsed());
+    
     Ok(())
 }

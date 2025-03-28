@@ -2,7 +2,7 @@ use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
 use log::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 struct Seqinfo {
     count_a: usize,
@@ -30,7 +30,6 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
     output: Option<P>,
     compression_level: u32,
 ) -> Result<(), Error> {
-    let start = Instant::now();
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {
@@ -102,7 +101,6 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
     }
     out.flush()?;
     info!("total sequence number: {}", n);
-    info!("time elapsed is: {:?}", start.elapsed());
 
     Ok(())
 }

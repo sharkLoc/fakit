@@ -2,7 +2,7 @@ use crate::utils::*;
 use anyhow::Error;
 use bio::io::fasta;
 use log::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 #[derive(Debug)]
 struct Seqinfo {
@@ -59,7 +59,6 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
         error!("usage: fakit  summ -h/--help, get more help");
         std::process::exit(1);
     }
-    let start = Instant::now();
     let mut fo = file_writer(output, compression_level)?;
     if all {
         let header ="file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
@@ -154,6 +153,5 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
     }
     fo.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

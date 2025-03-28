@@ -2,7 +2,6 @@ use crate::{utils::*, wrap::wrap_fasta};
 use anyhow::Result;
 use bio::io::fasta;
 use log::*;
-use std::time::Instant;
 use std::{collections::HashMap, path::Path};
 
 pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
@@ -12,7 +11,7 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+   
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {
@@ -56,6 +55,5 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     }
     out_writer.flush()?;
 
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }

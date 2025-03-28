@@ -3,7 +3,7 @@ use crate::wrap::*;
 use anyhow::Result;
 use bio::io::fasta;
 use log::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 #[allow(clippy::too_many_arguments)]
 pub fn seq_fa<P: AsRef<Path> + Copy>(
@@ -18,7 +18,7 @@ pub fn seq_fa<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<()> {
-    let start = Instant::now();
+
     let fp = fasta::Reader::new(file_reader(input)?);
 
     if let Some(file) = input {
@@ -102,6 +102,5 @@ pub fn seq_fa<P: AsRef<Path> + Copy>(
     fo.flush()?;
 
     info!("total {} sequences output", count);
-    info!("time elapsed is: {:?}", start.elapsed());
     Ok(())
 }
