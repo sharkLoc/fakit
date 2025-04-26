@@ -1,5 +1,4 @@
-use crate::utils::*;
-use anyhow::Error;
+use crate::{errors::FakitError, utils::*};
 use bio::io::fasta;
 use log::*;
 use nthash::nthash;
@@ -11,8 +10,7 @@ pub fn kmer_count(
     header: bool,
     output: Option<&String>,
     compression_level: u32,
-) -> Result<(), Error> {
-    
+) -> Result<(), FakitError> {
     let reader = file_reader(input).map(fasta::Reader::new)?;
     if let Some(file) = input {
         info!("reading from file: {}", file);
@@ -47,6 +45,6 @@ pub fn kmer_count(
         writer.write_all(format!("\t{}\n", v).as_bytes())?;
     }
     writer.flush()?;
-    
+
     Ok(())
 }

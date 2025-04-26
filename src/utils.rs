@@ -1,8 +1,8 @@
-use anyhow::{Error, Ok, Result};
+use crate::errors::FakitError;
 use log::error;
 use std::{
     fs::File,
-    io::{self, prelude::*,stdin, IsTerminal, BufRead, BufReader, BufWriter, Write},
+    io::{self, BufRead, BufReader, BufWriter, IsTerminal, Write, prelude::*, stdin},
     path::Path,
 };
 
@@ -13,14 +13,14 @@ const XZ_MAGIC: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5A, 0x00];
 const MAGIC_MAX_LEN: usize = 6;
 const BUFF_SIZE: usize = 1024 * 1024;
 
-fn magic_num<P: AsRef<Path> + Copy>(file_name: P) -> Result<[u8; MAGIC_MAX_LEN], Error> {
+fn magic_num<P: AsRef<Path> + Copy>(file_name: P) -> Result<[u8; MAGIC_MAX_LEN], FakitError> {
     let mut buffer: [u8; MAGIC_MAX_LEN] = [0; MAGIC_MAX_LEN];
     let mut fp = File::open(file_name)?;
     let _ = fp.read(&mut buffer)?;
     Ok(buffer)
 }
 
-fn is_gzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
+fn is_gzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
     let buffer = magic_num(file_name)?;
     let gz_or_not =
         buffer[0] == GZ_MAGIC[0] && buffer[1] == GZ_MAGIC[1] && buffer[2] == GZ_MAGIC[2];
@@ -31,7 +31,7 @@ fn is_gzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
             .is_some_and(|ext| ext == "gz"))
 }
 
-fn is_bzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
+fn is_bzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
     let buffer = magic_num(file_name)?;
     let bz_or_not =
         buffer[0] == BZ_MAGIC[0] && buffer[1] == BZ_MAGIC[1] && buffer[2] == BZ_MAGIC[2];
@@ -42,7 +42,7 @@ fn is_bzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
             .is_some_and(|ext| ext == "bz2"))
 }
 
-fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
+fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
     let buffer = magic_num(file_name)?;
     let xz_or_not = buffer[0] == XZ_MAGIC[0]
         && buffer[1] == XZ_MAGIC[1]
@@ -57,7 +57,7 @@ fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool> {
             .is_some_and(|ext| ext == "xz"))
 }
 
-pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>>
+pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>, FakitError>
 where
     P: AsRef<Path> + Copy,
 {
@@ -86,8 +86,8 @@ where
             Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp)))
         }
     } else {
-        if stdin().is_terminal(){ //atty::is(atty::Stream::Stdin) {
-            error!("stdin not detected");
+        if stdin().is_terminal() {
+            error!("{}", FakitError::StdinNotDetected);
             std::process::exit(1);
         }
         let fp = BufReader::new(io::stdin());
@@ -95,7 +95,10 @@ where
     }
 }
 
-pub fn file_writer<P>(file_out: Option<P>, compression_level: u32) -> Result<Box<dyn Write>>
+pub fn file_writer<P>(
+    file_out: Option<P>,
+    compression_level: u32,
+) -> Result<Box<dyn Write>, FakitError>
 where
     P: AsRef<Path> + Copy,
 {

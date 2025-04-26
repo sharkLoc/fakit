@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use regex::RegexBuilder;
@@ -16,8 +16,7 @@ pub fn grep_fasta<P: AsRef<Path> + Copy>(
     by_seq: bool,
     line_width: usize,
     compression_level: u32,
-) -> Result<(), Error> {
-
+) -> Result<(), FakitError> {
     let mut fo = file_writer(out, compression_level).map(fasta::Writer::new)?;
 
     if let Some(file) = file {

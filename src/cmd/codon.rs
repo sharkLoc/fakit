@@ -1,9 +1,10 @@
-use anyhow::Error;
 use colored::*;
 use log::error;
 use std::collections::HashMap;
 
-pub fn show_codon(name: Option<String>) -> Result<(), Error> {
+use crate::errors::FakitError;
+
+pub fn show_codon(name: Option<String>) -> Result<(), FakitError> {
     let codons = vec![
         "UUU (Phe/F)",
         "UUC (Phe/F)",

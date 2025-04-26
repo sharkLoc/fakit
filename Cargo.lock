@@ -516,6 +516,7 @@ dependencies = [
  "rand_pcg",
  "regex",
  "rust-htslib",
+ "thiserror 2.0.12",
  "xz2",
 ]
 

@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::Result;
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -12,8 +12,7 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     output: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
-    
+) -> Result<(), FakitError> {
     let fp_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {
@@ -33,6 +32,6 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     }
     fp_writer.flush()?;
     info!("total get sequence number: {}", count);
-    
+
     Ok(())
 }

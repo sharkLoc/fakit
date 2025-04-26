@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::Result;
 use bio::io::fasta::{self, Record};
 use log::*;
 use rand::prelude::*;
@@ -13,8 +13,7 @@ pub fn shuffle_fasta<P: AsRef<Path> + Copy>(
     out: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
-    
+) -> Result<(), FakitError> {
     let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {

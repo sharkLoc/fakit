@@ -1,13 +1,25 @@
-use clap::{value_parser, ArgAction, Parser};
+use clap::{
+    ArgAction, Parser,
+    builder::{
+        Styles,
+        styling::{AnsiColor, Effects},
+    },
+    value_parser,
+};
 use std::path::PathBuf;
 
-pub const VERSION: &str = "0.3.9";
+const STYLES: Styles = Styles::styled()
+    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
+    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
+    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
+    .placeholder(AnsiColor::Cyan.on_default());
 
 #[derive(Parser, Debug)]
+#[command(styles = STYLES)]
 #[command(
     name = "Fakit",
-    author = "sharkLoc",
-    version = VERSION,
+    author = env!("CARGO_PKG_AUTHORS"),
+    version = env!("CARGO_PKG_AUTHORS"),
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,

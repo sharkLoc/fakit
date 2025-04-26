@@ -1,7 +1,7 @@
-use anyhow::{Ok, Result};
+use crate::errors::FakitError;
 
 #[inline]
-pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>> {
+pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>, FakitError> {
     let seq_len = seq_slice.len();
     let mut seq_new: Vec<&[u8]> = vec![];
     let mut index = 0usize;

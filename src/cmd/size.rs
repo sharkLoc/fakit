@@ -1,5 +1,5 @@
+use crate::errors::FakitError;
 use crate::utils::*;
-use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -29,7 +29,7 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
     all: bool,
     output: Option<P>,
     compression_level: u32,
-) -> Result<(), Error> {
+) -> Result<(), FakitError> {
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {

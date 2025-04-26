@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 use chrono::Local;
-use env_logger::{fmt::Color, Builder, Target};
+use env_logger::{Builder, Target, fmt::Color};
 use log::{Level, LevelFilter};
 use std::{
     fs::File,
@@ -13,22 +13,18 @@ pub fn logger<P: AsRef<Path>>(
     logfile: Option<P>,
     quiet: bool,
 ) -> Result<(), anyhow::Error> {
-    let mut level = if verbose == 1 {
-        LevelFilter::Error
-    } else if verbose == 2 {
-        LevelFilter::Warn
-    } else if verbose == 3 {
-        LevelFilter::Info
-    } else if verbose == 4 {
-        LevelFilter::Debug
-    } else if verbose == 5 {
-        LevelFilter::Trace
-    } else {
+    let level = if quiet {
         LevelFilter::Off
+    } else {
+        match verbose {
+            1 => LevelFilter::Error,
+            2 => LevelFilter::Warn,
+            3 => LevelFilter::Info,
+            4 => LevelFilter::Debug,
+            5 => LevelFilter::Trace,
+            _ => LevelFilter::Off,
+        }
     };
-    if quiet {
-        level = LevelFilter::Off;
-    }
 
     let mut builder = Builder::from_default_env();
     builder.format(|buf, record| {
@@ -50,9 +46,10 @@ pub fn logger<P: AsRef<Path>>(
                 style.set_color(Color::Magenta).set_bold(true);
             }
         }
+
         writeln!(
             buf,
-            "[{} {} - {}] {}",
+            "{} {} - {} {}",
             Local::now().format("%Y-%m-%dT%H:%M:%S"),
             style.value(record.level()),
             buf.style()

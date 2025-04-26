@@ -7,56 +7,21 @@ mod cli;
 use cli::*;
 mod logger;
 use logger::*;
-mod top;
-use top::*;
-mod tail;
-use tail::*;
-mod fa2fq;
-use fa2fq::*;
-mod faidx;
-use faidx::*;
-mod flatten;
-use flatten::*;
-mod range;
-use range::*;
-mod rename;
-use rename::*;
-mod reverse;
-use reverse::*;
-mod search;
-use search::*;
-mod grep;
-use grep::*;
-mod seq;
-use seq::*;
-mod shuffle;
-use shuffle::*;
-mod slide;
-use slide::*;
-mod sort;
-use sort::*;
-mod split;
-use split::*;
-mod split2;
-use split2::*;
-mod subfa;
-use subfa::*;
-mod summ;
-use summ::*;
-mod size;
-use size::*;
-mod kmer;
-use kmer::*;
-mod codon;
-mod wrap;
-use codon::*;
+mod errors;
+
+mod cmd;
 mod utils;
+use cmd::{
+    codon::*, fa2fq::*, faidx::*, flatten::*, grep::*, kmer::*, range::*, rename::*, reverse::*,
+    search::*, seq::*, shuffle::*, size::*, slide::*, sort::*, split::*, split2::*, subfa::*,
+    summ::*, tail::*, top::*,
+};
 
 fn main() -> Result<(), Error> {
     let args = cli::Args::parse();
     logger(args.verbose, args.logfile, args.quiet)?;
     let start = Instant::now();
-    info!("version: {}", VERSION);
+    info!("version: {}", env!("CARGO_PKG_AUTHORS"));
 
     match args.command {
         Subcli::topn { input, num, output } => {

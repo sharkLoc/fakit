@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::{Error, Ok};
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -15,7 +15,7 @@ pub fn split_chunk<P: AsRef<Path> + Copy>(
     out_pre: &str,
     line_width: usize,
     compression_level: u32,
-) -> Result<(), Error> {
+) -> Result<(), FakitError> {
     let fa_reader = fasta::Reader::new(file_reader(file)?);
 
     if let Some(file) = file {

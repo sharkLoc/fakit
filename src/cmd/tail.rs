@@ -1,5 +1,5 @@
+use crate::errors::FakitError;
 use crate::utils::*;
-use anyhow::Result;
 use log::info;
 use noodles::fasta::io::{reader::Reader, writer};
 use std::io::BufReader;
@@ -11,7 +11,7 @@ pub fn tail_n_records<P: AsRef<Path> + Copy>(
     output: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
+) -> Result<(), FakitError> {
     let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
 
     if let Some(file) = input {

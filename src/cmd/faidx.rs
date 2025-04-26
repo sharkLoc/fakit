@@ -1,10 +1,10 @@
 use crate::utils::file_writer;
 use anyhow::{Ok, Result};
 use log::{error, info, warn};
-use noodles::core::{position::Position, region::interval::Interval, Region};
+use noodles::core::{Region, position::Position, region::interval::Interval};
 use noodles::fasta::{self, fai, index, indexed_reader};
-use std::path::PathBuf;
 use std::path::Path;
+use std::path::PathBuf;
 
 pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -12,7 +12,6 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     output: Option<P>,
     compression_level: u32,
 ) -> Result<()> {
-
     if let Some(file) = input {
         let fai = format!("{}.fai", file.as_ref().display());
         if PathBuf::from(fai.clone()).exists() {

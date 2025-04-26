@@ -1,8 +1,8 @@
+use crate::errors::FakitError;
 use crate::utils::{file_reader, file_writer};
-use anyhow::Result;
 use log::info;
 use noodles::fasta::io::reader::Reader;
-use noodles::fastq::{io::Writer, record::Definition, Record};
+use noodles::fastq::{Record, io::Writer, record::Definition};
 use std::{io::BufReader, path::Path};
 
 pub fn fake_quality<P: AsRef<Path> + Copy>(
@@ -10,7 +10,7 @@ pub fn fake_quality<P: AsRef<Path> + Copy>(
     qual: char,
     out: Option<P>,
     compression_level: u32,
-) -> Result<()> {
+) -> Result<(), FakitError> {
     let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
 
     if let Some(file) = input {

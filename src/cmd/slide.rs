@@ -1,5 +1,5 @@
+use crate::errors::FakitError;
 use crate::utils::*;
-use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -11,7 +11,7 @@ pub fn silding_window<P: AsRef<Path> + Copy>(
     out: Option<P>,
     keep: bool,
     compression_level: u32,
-) -> Result<(), Error> {
+) -> Result<(), FakitError> {
     let fp = fasta::Reader::new(file_reader(file)?);
 
     if step == 0 {

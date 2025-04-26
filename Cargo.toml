@@ -29,6 +29,7 @@ rand = "0.9.0"
 rand_pcg = "0.9.0"
 regex = "1.11.1"
 rust-htslib = "0.40.2"
+thiserror = "2.0.12"
 xz2 = "0.1.7"
 
 [profile.release]

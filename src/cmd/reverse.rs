@@ -1,5 +1,5 @@
-use crate::{utils::*, wrap::wrap_fasta};
-use anyhow::Result;
+use crate::utils::*;
+use crate::{cmd::wrap::*, errors::FakitError};
 use bio::io::fasta;
 use log::*;
 use std::{collections::HashMap, path::Path};
@@ -10,8 +10,7 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     rev: bool,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
-   
+) -> Result<(), FakitError> {
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
 
     if let Some(file) = input {

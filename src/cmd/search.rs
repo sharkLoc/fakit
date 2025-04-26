@@ -1,5 +1,5 @@
+use crate::errors::FakitError;
 use crate::utils::*;
-use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use regex::Regex;
@@ -11,8 +11,7 @@ pub fn search_fa<P: AsRef<Path> + Copy>(
     pat: &str,
     header: bool,
     compression_level: u32,
-) -> Result<(), Error> {
-   
+) -> Result<(), FakitError> {
     let fp = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {

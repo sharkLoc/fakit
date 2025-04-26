@@ -1,5 +1,4 @@
-use crate::utils::*;
-use anyhow::Result;
+use crate::{errors::FakitError, utils::*};
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -9,8 +8,7 @@ pub fn flatten_fa<P: AsRef<Path> + Copy>(
     out: Option<P>,
     keep: bool,
     compression_level: u32,
-) -> Result<()> {
-
+) -> Result<(), FakitError> {
     let reader = file_reader(file).map(fasta::Reader::new)?;
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());

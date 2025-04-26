@@ -1,5 +1,5 @@
+use crate::errors::FakitError;
 use crate::utils::*;
-use anyhow::Error;
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -54,14 +54,14 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
     all: bool,
     output: Option<P>,
     compression_level: u32,
-) -> Result<(), Error> {
+) -> Result<(), FakitError> {
     if input.is_empty() {
         error!("usage: fakit  summ -h/--help, get more help");
         std::process::exit(1);
     }
     let mut fo = file_writer(output, compression_level)?;
     if all {
-        let header ="file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
+        let header = "file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
         fo.write_all(header.as_bytes())?;
     } else {
         let header = "file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";

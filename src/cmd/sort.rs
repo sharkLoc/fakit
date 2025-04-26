@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::{Error, Ok};
 use bio::io::fasta::{self, Record};
 use log::*;
 use std::path::Path;
@@ -16,7 +16,7 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     out: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<(), Error> {
+) -> Result<(), FakitError> {
     let fa_reader = file_reader(file).map(fasta::Reader::new)?;
 
     if let Some(file) = file {
@@ -39,7 +39,9 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
         n += 1;
     }
     if n > 1 {
-        error!("only one of the flags -l (--sort-by-length), -n (--sort-by-name), -g (--sort-by-gc) and -s (--sort-by-seq) is allowed");
+        error!(
+            "only one of the flags -l (--sort-by-length), -n (--sort-by-name), -g (--sort-by-gc) and -s (--sort-by-seq) is allowed"
+        );
         std::process::exit(1);
     }
     if n == 0 {

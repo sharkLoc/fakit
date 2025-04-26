@@ -1,9 +1,9 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::Result;
 use bio::io::fasta;
 use log::*;
-use rand::{prelude::*, Rng};
+use rand::{Rng, prelude::*};
 use rand_pcg::Pcg64;
 use std::path::Path;
 
@@ -15,7 +15,7 @@ pub fn select_fasta<P: AsRef<Path> + Copy>(
     out: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
+) -> Result<(), FakitError> {
     let fa_reader = fasta::Reader::new(file_reader(file)?);
 
     if let Some(file) = file {
@@ -62,7 +62,7 @@ pub fn select_fasta2<P: AsRef<Path> + Copy>(
     out: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
+) -> Result<(), FakitError> {
     if let Some(file) = file {
         info!("reading from file: {:?}", file.as_ref());
     } else {

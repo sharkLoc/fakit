@@ -1,6 +1,6 @@
+use crate::cmd::wrap::*;
+use crate::errors::FakitError;
 use crate::utils::*;
-use crate::wrap::*;
-use anyhow::Result;
 use bio::io::fasta::{self, Record};
 use log::*;
 use std::path::Path;
@@ -12,7 +12,7 @@ pub fn split_fa<P: AsRef<Path> + Copy>(
     outdir: Option<P>,
     line_width: usize,
     compression_level: u32,
-) -> Result<()> {
+) -> Result<(), FakitError> {
     let fp = fasta::Reader::new(file_reader(input)?);
 
     if let Some(input) = input {
