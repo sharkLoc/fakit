@@ -24,32 +24,26 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
     let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
     let mut n: usize = 0;
 
-    if let Some(pre) = prefix {
-        for rec in fp.records().flatten() {
-            n += 1;
-            let newid = format!("{}{}", pre, n);
-            let seq_new = wrap_fasta(rec.seq(), line_width)?;
-            let record = if keep {
-                Record::with_attrs(&newid, rec.desc(), seq_new.as_slice())
-            } else {
-                Record::with_attrs(&newid, None, seq_new.as_slice())
-            };
-            fo.write_record(&record)?;
+    let prefix_fn = |n: usize, rec: &Record| -> String {
+        if let Some(pre) = &prefix {
+            format!("{}{}", pre, n)
+        } else {
+            rec.id().to_string()
         }
-        fo.flush()?;
-    } else {
-        for rec in fp.records().flatten() {
-            n += 1;
-            let seq_new = wrap_fasta(rec.seq(), line_width)?;
-            let record = if keep {
-                Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice())
-            } else {
-                Record::with_attrs(rec.id(), None, seq_new.as_slice())
-            };
-            fo.write_record(&record)?;
-        }
-        fo.flush()?;
+    };
+
+    for rec in fp.records().flatten() {
+        n += 1;
+        let newid = prefix_fn(n, &rec);
+        let seq_new = wrap_fasta(rec.seq(), line_width)?;
+        let record = if keep {
+            Record::with_attrs(&newid, rec.desc(), seq_new.as_slice())
+        } else {
+            Record::with_attrs(&newid, None, seq_new.as_slice())
+        };
+        fo.write_record(&record)?;
     }
+    fo.flush()?;
 
     Ok(())
 }

@@ -19,7 +19,7 @@ const STYLES: Styles = Styles::styled()
 #[command(
     name = "Fakit",
     author = env!("CARGO_PKG_AUTHORS"),
-    version = env!("CARGO_PKG_AUTHORS"),
+    version = env!("CARGO_PKG_VERSION"),
     about = "A simple program for fasta file manipulation",
     long_about = None,
     next_line_help = false,

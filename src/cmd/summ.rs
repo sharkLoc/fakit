@@ -1,5 +1,7 @@
-use crate::errors::FakitError;
-use crate::utils::*;
+use crate::{
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
 use bio::io::fasta;
 use log::*;
 use std::path::Path;
@@ -56,16 +58,15 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), FakitError> {
     if input.is_empty() {
-        error!("usage: fakit  summ -h/--help, get more help");
+        error!("{}", FakitError::FileNotFound);
         std::process::exit(1);
     }
+
     let mut fo = file_writer(output, compression_level)?;
     if all {
-        let header = "file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
-        fo.write_all(header.as_bytes())?;
+        fo.write_all("file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n".as_bytes())?;
     } else {
-        let header = "file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n";
-        fo.write_all(header.as_bytes())?;
+        fo.write_all("file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n".as_bytes())?;
     }
 
     for i in input {

@@ -6,6 +6,9 @@ pub enum FakitError {
     #[error("Stdin not detected")]
     StdinNotDetected,
 
+    #[error("File not found")]
+    FileNotFound,
+
     #[error("Io error")]
     IoError(#[from] std::io::Error),
 
