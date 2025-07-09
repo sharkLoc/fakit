@@ -33,6 +33,7 @@ Compression level:
   gzip     1-9     6         https://crates.io/crates/flate2
   bzip2    1-9     6         https://crates.io/crates/bzip2
   xz       1-9     6         https://crates.io/crates/xz2
+  zstd     1-4     2         roughly equals to zstd 1, 3, 7, 11, respectively
 
 
 Usage: fakit [OPTIONS] <COMMAND>

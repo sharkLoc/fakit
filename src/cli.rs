@@ -34,7 +34,8 @@ Compression level:
   format   range   default   crate
   gzip     1-9     6         https://crates.io/crates/flate2
   bzip2    1-9     6         https://crates.io/crates/bzip2
-  xz       1-9     6         https://crates.io/crates/xz2",
+  xz       1-9     6         https://crates.io/crates/xz2
+  zstd     1-4     2         roughly equals to zstd 1, 3, 7, 11, respectively",
     help_template = "{name}: {about}\n\nVersion: {version}\
     \n\nAuthors: {author} <mmtinfo@163.com>\
     \nSource code: https://github.com/sharkLoc/fakit.git\

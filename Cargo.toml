@@ -1,6 +1,6 @@
 [package]
 name = "fakit"
-version = "0.3.9"
+version = "0.4.0"
 edition = "2024"
 authors = ["sharkLoc <mmtinfo@163.com>"]
 rust-version = "1.85.0"
@@ -29,6 +29,7 @@ regex = "1.11.1"
 rust-htslib = "0.40.2"
 thiserror = "2.0.12"
 xz2 = "0.1.7"
+zstd = "0.13.3"
 
 [profile.release]
 strip = true

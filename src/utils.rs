@@ -9,7 +9,7 @@ use std::{
 const GZ_MAGIC: [u8; 3] = [0x1f, 0x8b, 0x08];
 const BZ_MAGIC: [u8; 3] = [0x42, 0x5a, 0x68];
 const XZ_MAGIC: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5A, 0x00];
-//const ZSTD_MAGIC: [u8; 4] = [0x28, 0xb5, 0x2f, 0xfd]; // TODO
+const ZSTD_MAGIC: [u8; 4] = [0x28, 0xb5, 0x2f, 0xfd];
 const MAGIC_MAX_LEN: usize = 6;
 const BUFF_SIZE: usize = 1024 * 1024;
 
@@ -57,6 +57,20 @@ fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
             .is_some_and(|ext| ext == "xz"))
 }
 
+fn is_zstd<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
+    let buffer = magic_num(file_name)?;
+    let zstd_or_not = buffer[0] == ZSTD_MAGIC[0]
+        && buffer[1] == ZSTD_MAGIC[1]
+        && buffer[2] == ZSTD_MAGIC[2]
+        && buffer[3] == ZSTD_MAGIC[3];
+    Ok(zstd_or_not
+        || file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "zst"))
+}
+
+
 pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>, FakitError>
 where
     P: AsRef<Path> + Copy,
@@ -66,6 +80,7 @@ where
         let gz_flag = is_gzipped(file_name)?;
         let bz_flag = is_bzipped(file_name)?;
         let zx_flag = is_xz(file_name)?;
+        let zstd_flag = is_zstd(file_name)?;
 
         if gz_flag {
             Ok(Box::new(BufReader::with_capacity(
@@ -81,6 +96,11 @@ where
             Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
                 xz2::read::XzDecoder::new_multi_decoder(fp),
+            )))
+        } else if zstd_flag {
+            Ok(Box::new(BufReader::with_capacity(
+                BUFF_SIZE,
+                zstd::stream::read::Decoder::new(fp)?,
             )))
         } else {
             Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp)))
@@ -131,7 +151,24 @@ where
                 BUFF_SIZE,
                 xz2::write::XzEncoder::new(fp, compression_level),
             )))
-        } else {
+        } else if file_name
+            .as_ref()
+            .extension()
+            .is_some_and(|ext| ext == "zst")
+        {
+            let level = match compression_level {
+                1 => 1,
+                2 => 3,
+                3 => 7,
+                4 => 11,
+                _ => 3
+            };
+            Ok(Box::new(BufWriter::with_capacity(
+                BUFF_SIZE,
+                zstd::stream::write::Encoder::new(fp, level)?,
+            )))
+        } 
+        else {
             Ok(Box::new(BufWriter::with_capacity(BUFF_SIZE, fp)))
         }
     } else {
@@ -156,5 +193,10 @@ mod tests {
     #[test]
     fn bzip2_or_not() {
         assert_eq!(is_bzipped("example/uniques.fa.bz2").unwrap(), true);
+    }
+
+    #[test]
+    fn zstd_or_not() {
+        assert!(is_zstd("example/uniques.fa.zst").unwrap());
     }
 }
