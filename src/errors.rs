@@ -20,4 +20,7 @@ pub enum FakitError {
 
     #[error("Utf8 error")]
     Utf8Error(#[from] std::str::Utf8Error),
+
+    #[error("ParaseqFastaError")]
+    ParaseqFastaError(#[from] paraseq::fasta::Error),
 }

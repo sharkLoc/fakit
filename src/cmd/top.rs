@@ -3,8 +3,9 @@ use crate::{
     utils::{file_reader, file_writer},
 };
 use log::info;
-use noodles::fasta::io::{reader::Reader, writer};
 use std::{io::BufReader, path::Path};
+use paraseq::fasta::{Reader, RecordSet};
+use crate::cmd::wrap::wrap_fasta2;
 
 pub fn top_n_records<P: AsRef<Path> + Copy>(
     number: usize,
@@ -14,21 +15,31 @@ pub fn top_n_records<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), FakitError> {
     let mut fdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
+    let mut rset = RecordSet::default();
+    let mut wdr = file_writer(output, compression_level)?;
 
     if let Some(file) = input {
         info!("reading from file: {}", file.as_ref().display());
     } else {
         info!("reading from stdin");
     }
+    let mut count = 0usize;
+    'outer: while rset.fill(&mut fdr)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            if count >= number {
+                break 'outer;
+            }
+            count += 1;
 
-    let mut fdw = writer::Builder::default()
-        .set_line_base_count(line_width)
-        .build_from_writer(file_writer(output, compression_level)?);
-
-    for rec in fdr.records().take(number).flatten() {
-        fdw.write_record(&rec)?;
+            wdr.write_all(b">")?;
+            wdr.write_all(rec.id())?;
+            wdr.write_all(b"\n")?;
+            wrap_fasta2(&rec.seq(), line_width, &mut wdr)?;
+            wdr.write_all(b"\n")?;
+        }
     }
 
+    wdr.flush()?;
     info!("get top {} records", number);
     Ok(())
 }

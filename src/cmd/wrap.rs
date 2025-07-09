@@ -27,3 +27,34 @@ pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>, FakitE
 
     Ok(seq_wrap)
 }
+
+
+#[inline]
+pub fn wrap_fasta2(
+    seq_slice: &[u8], 
+    line_width: usize,
+    writer: &mut impl std::io::Write,
+) -> Result<(), FakitError> {
+    let seq_len = seq_slice.len();
+    let mut index = 0usize;
+
+    loop {
+        index += line_width;
+        let start = index - line_width;
+        if index < seq_len {
+            let window = &seq_slice[start..index];
+            writer.write_all(window)?;
+            writer.write_all(b"\n")?;
+        } else {
+            index = seq_len;
+            let window = &seq_slice[start..index];
+            writer.write_all(window)?;
+        }
+        // line end
+        if index == seq_len {
+            break;
+        }
+    }
+
+    Ok(())
+}

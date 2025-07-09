@@ -23,6 +23,7 @@ flate2 = "1.1.2"
 log = "0.4.27"
 noodles = { version = "0.97.0", features = ["core", "fasta", "fastq"] }
 nthash = "0.5.1"
+paraseq = "0.2.2"
 rand = "0.9.1"
 rand_pcg = "0.9.0"
 regex = "1.11.1"
