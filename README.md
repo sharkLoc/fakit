@@ -19,7 +19,7 @@ cargo install fakit
 ```bash
 Fakit: A simple program for fasta file manipulation
 
-Version: 0.3.9
+Version: 0.4.0
 
 Authors: sharkLoc <mmtinfo@163.com>
 Source code: https://github.com/sharkLoc/fakit.git
