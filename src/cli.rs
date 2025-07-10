@@ -52,8 +52,8 @@ pub struct Args {
     )]
     pub width: usize,
 
-    /// set gzip/bzip2/xz/zstd compression level 1 (compress faster) - 9 (compress better) for output file,
-    /// {n}just work with option -o/--out
+    /// set gzip/bzip2/xz/zstd compression level 1 (compress faster) - 9 (compress better) for output file, just work with option -o/--out, 
+    /// {n}file name ending in .gz/.bz2/.xz/.zst will be compressed automatically
     #[arg(long = "compress-level", default_value_t = 6, global = true, value_parser = value_parser!(u32).range(1..=9), value_name = "int",
         help_heading = Some("Global Arguments")
     )]
@@ -94,7 +94,7 @@ pub enum Subcli {
         /// print first N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
         num: usize,
-        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fasta file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<PathBuf>,
     },
@@ -111,7 +111,7 @@ pub enum Subcli {
         /// 2-pass mode read files twice to lower memory usage. Not allowed when reading from stdin
         #[arg(short = '2', long = "two-pass", help_heading = Some("FLAGS"))]
         two_pass: bool,
-        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fasta file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -122,7 +122,7 @@ pub enum Subcli {
         /// fasta to fastq and generate fake fastq quality.
         #[arg(short = 'Q', long = "qual", default_value_t = 'F', value_name = "char")]
         qual: char,
-        /// output fastq file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fastq file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -135,7 +135,7 @@ pub enum Subcli {
         /// usage:  fakit faidx seq.fa chr1:1-5000 chr2:100-800 ...
         #[arg(verbatim_doc_comment)]
         region: Option<Vec<String>>,
-        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fasta file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -159,7 +159,7 @@ pub enum Subcli {
         /// if specified, add GC content(%) in output
         #[arg(short = 'g', long = "gc-content", help_heading = Some("FLAGS"))]
         gc: bool,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -173,7 +173,7 @@ pub enum Subcli {
         /// take int fasta records
         #[arg(short = 't', long = "take", value_name = "int")]
         take: usize,
-        /// fasta output file name or write to stdout, files ending in .gz/.bz2/.xz will be compressed automatically
+        /// fasta output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -187,7 +187,7 @@ pub enum Subcli {
         /// set new id prefix for sequence
         #[arg(short = 'p', long = "prefix", value_name = "str")]
         prefix: Option<String>,
-        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fasta file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -199,7 +199,7 @@ pub enum Subcli {
         /// if set, just output reverse sequences
         #[arg(short = 'r', long = "reverse", help_heading = Some("FLAGS"))]
         rev: bool,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -227,7 +227,7 @@ pub enum Subcli {
         /// if specified, keep fasta format in output result
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool,
-        /// output result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output result file name, or write to stdout
         ///header format: seqid    start   end gc_rate sequence
         #[arg(short = 'o', long = "out", verbatim_doc_comment, value_name = "str")]
         output: Option<String>,
@@ -254,7 +254,7 @@ pub enum Subcli {
         /// grep sequences by sequence
         #[arg(short = 'i', long = "ignore-case", help_heading = Some("FLAGS"))]
         ignore: bool,
-        /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output search result file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -280,7 +280,7 @@ pub enum Subcli {
         /// if specified, fasta sequences gc content more than length required will be discarded
         #[arg(short = 'G', long = "gc-max", value_name = "float")]
         gc_max: Option<f64>,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -304,7 +304,7 @@ pub enum Subcli {
         /// output reversed result
         #[arg(short = 'r', long = "reverse", help_heading = Some("FLAGS"))]
         reverse: bool,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -324,7 +324,7 @@ pub enum Subcli {
         /// if specified, show header in result
         #[arg(short = 'H', long = "header", help_heading = Some("FLAGS"))]
         Header: bool,
-        /// output search result file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output search result file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -343,7 +343,7 @@ pub enum Subcli {
         /// add header info in output file
         #[arg(short = 'H', long, help_heading = Some("FLAGS"))]
         header: bool,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -355,7 +355,7 @@ pub enum Subcli {
         /// set rand seed.
         #[arg(short = 's', long = "seed", default_value_t = 69, value_name = "int")]
         seed: u64,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         out: Option<String>,
     },
@@ -366,7 +366,7 @@ pub enum Subcli {
         /// if specified, show more information
         #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
         all: bool,
-        /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
+        /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -383,7 +383,7 @@ pub enum Subcli {
         /// subseq number
         #[arg(short = 'n', long = "num", value_name = "int")]
         num: usize,
-        /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output fasta file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
@@ -430,7 +430,7 @@ pub enum Subcli {
         /// if specified, show more information
         #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
         all: bool,
-        /// output summary file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
+        /// output summary file name, or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
     },
