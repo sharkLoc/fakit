@@ -146,6 +146,18 @@ pub enum Subcli {
         /// if specified, keep sequence id description
         #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
         keep: bool,
+        /// output seprater, can be ",",  ";",
+        #[arg(short = 's', long = "sep", default_value_t = '\t', value_name = "CHAR")]
+        sep: char,
+        /// if specified, add N base count in output
+        #[arg(short = 'n', long = "gap-n", help_heading = Some("FLAGS"))]
+        gap: bool,
+        /// if specified, add read length in output
+        #[arg(short = 'l', long = "length", help_heading = Some("FLAGS"))]
+        len: bool,
+        /// if specified, add GC content(%) in output
+        #[arg(short = 'g', long = "gc-content", help_heading = Some("FLAGS"))]
+        gc: bool,
         /// output file name or write to stdout, file ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,

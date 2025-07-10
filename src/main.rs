@@ -89,12 +89,20 @@ fn main() -> Result<(), Error> {
         Subcli::flatten {
             input,
             keep,
+            gap,
+            len,
+            gc,
+            sep,
             output,
         } => {
             flatten_fa(
                 input.as_ref(),
-                output.as_ref(),
                 keep,
+                gap,
+                len,
+                gc,
+                sep,
+                output.as_ref(),
                 args.compression_level,
             )?;
         }
