@@ -1,5 +1,5 @@
 use crate::errors::FakitError;
-use log::error;
+use log::{error, info};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader, BufWriter, IsTerminal, Write, prelude::*, stdin},
@@ -70,18 +70,18 @@ fn is_zstd<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
             .is_some_and(|ext| ext == "zst"))
 }
 
-
-pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead>, FakitError>
+pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead + Send>, FakitError>
 where
     P: AsRef<Path> + Copy,
 {
     if let Some(file_name) = file_in {
-        let fp = File::open(file_name)?;
         let gz_flag = is_gzipped(file_name)?;
         let bz_flag = is_bzipped(file_name)?;
         let zx_flag = is_xz(file_name)?;
         let zstd_flag = is_zstd(file_name)?;
 
+        info!("reading from file: {}", file_name.as_ref().display());
+        let fp = File::open(file_name)?;
         if gz_flag {
             Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
@@ -110,6 +110,7 @@ where
             error!("{}", FakitError::StdinNotDetected);
             std::process::exit(1);
         }
+        info!("reading from stdin");
         let fp = BufReader::new(io::stdin());
         Ok(Box::new(fp))
     }
@@ -118,7 +119,7 @@ where
 pub fn file_writer<P>(
     file_out: Option<P>,
     compression_level: u32,
-) -> Result<Box<dyn Write>, FakitError>
+) -> Result<Box<dyn Write + Send>, FakitError>
 where
     P: AsRef<Path> + Copy,
 {
@@ -161,14 +162,13 @@ where
                 2 => 3,
                 3 => 7,
                 4 => 11,
-                _ => 3
+                _ => 3,
             };
             Ok(Box::new(BufWriter::with_capacity(
                 BUFF_SIZE,
                 zstd::stream::write::Encoder::new(fp, level)?,
             )))
-        } 
-        else {
+        } else {
             Ok(Box::new(BufWriter::with_capacity(BUFF_SIZE, fp)))
         }
     } else {

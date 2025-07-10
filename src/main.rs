@@ -33,10 +33,16 @@ fn main() -> Result<(), Error> {
                 args.compression_level,
             )?;
         }
-        Subcli::tail { input, num, output } => {
+        Subcli::tail {
+            input,
+            num,
+            two_pass,
+            output,
+        } => {
             tail_n_records(
                 num,
                 input.as_ref(),
+                two_pass,
                 output.as_ref(),
                 args.width,
                 args.compression_level,

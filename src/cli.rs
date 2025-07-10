@@ -105,6 +105,9 @@ pub enum Subcli {
         /// print last N fasta records
         #[arg(short = 'n', long = "num", default_value_t = 10, value_name = "int")]
         num: usize,
+        /// 2-pass mode read files twice to lower memory usage. Not allowed when reading from stdin
+        #[arg(short = '2', long = "two-pass", help_heading = Some("FLAGS"))]
+        two_pass: bool,
         /// output fasta file name, or write to stdout, file name ending in .gz/.bz2/.xz will be compressed automatically
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,

@@ -1,4 +1,5 @@
 use crate::errors::FakitError;
+use std::io::Write;
 
 #[inline]
 pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>, FakitError> {
@@ -28,10 +29,29 @@ pub fn wrap_fasta(seq_slice: &[u8], line_width: usize) -> Result<Vec<u8>, FakitE
     Ok(seq_wrap)
 }
 
+pub fn write_record<W>(
+    writer: &mut W,
+    id: &[u8],
+    seq: &[u8],
+    line_width: usize,
+) -> Result<(), FakitError>
+where
+    W: Write + Send,
+{
+    writer.write_all(b">")?;
+    writer.write_all(id)?;
+    writer.write_all(b"\n")?;
+    match line_width {
+        0 => writer.write_all(seq)?,
+        _ => line_wrap(seq, line_width, writer)?,
+    }
+    writer.write_all(b"\n")?;
+    Ok(())
+}
 
 #[inline]
-pub fn wrap_fasta2(
-    seq_slice: &[u8], 
+pub fn line_wrap(
+    seq_slice: &[u8],
     line_width: usize,
     writer: &mut impl std::io::Write,
 ) -> Result<(), FakitError> {

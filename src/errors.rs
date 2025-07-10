@@ -9,6 +9,9 @@ pub enum FakitError {
     #[error("File not found")]
     FileNotFound,
 
+    #[error("Two pass error")]
+    TwoPassNotAllowedStdin,
+
     #[error("Io error")]
     IoError(#[from] std::io::Error),
 
