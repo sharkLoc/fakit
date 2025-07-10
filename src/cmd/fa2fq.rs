@@ -1,8 +1,9 @@
-use crate::errors::FakitError;
-use crate::utils::{file_reader, file_writer};
+use crate::{
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
 use log::info;
-use noodles::fasta::io::reader::Reader;
-use noodles::fastq::{Record, io::Writer, record::Definition};
+use paraseq::fasta::{Reader, RecordSet};
 use std::{io::BufReader, path::Path};
 
 pub fn fake_quality<P: AsRef<Path> + Copy>(
@@ -12,26 +13,28 @@ pub fn fake_quality<P: AsRef<Path> + Copy>(
     compression_level: u32,
 ) -> Result<(), FakitError> {
     let mut rdr = file_reader(input).map(BufReader::new).map(Reader::new)?;
+    let mut rset = RecordSet::default();
 
-    if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
-
-    let mut wtr = file_writer(out, compression_level).map(Writer::new)?;
+    let mut wtr = file_writer(out, compression_level)?;
     let qualscore = qual;
-    for rec in rdr.records().flatten() {
-        let define = if let Some(desc) = rec.description() {
-            Definition::new(rec.name(), desc)
-        } else {
-            Definition::new(rec.name(), "")
-        };
 
-        let qua = &qualscore.to_string().repeat(rec.sequence().len());
-        let rec_new = Record::new(define, rec.sequence().as_ref(), qua.as_bytes());
-        wtr.write_record(&rec_new)?;
+    while rset.fill(&mut rdr)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            wtr.write_all(b"@")?;
+            wtr.write_all(rec.id())?;
+            wtr.write_all(b"\n")?;
+            wtr.write_all(&rec.seq())?;
+            wtr.write_all(b"\n")?;
+            wtr.write_all(b"+\n")?;
+            let qua = qualscore.to_string().repeat(rec.seq().len());
+            wtr.write_all(qua.as_bytes())?;
+            wtr.write_all(b"\n")?;
+        }
     }
-
+    wtr.flush()?;
+    info!(
+        "FA2FQ: fake quality scores added with character '{}'",
+        qualscore
+    );
     Ok(())
 }

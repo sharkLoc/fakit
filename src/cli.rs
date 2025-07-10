@@ -51,7 +51,7 @@ pub struct Args {
     )]
     pub width: usize,
 
-    /// set gzip/bzip2/xz compression level 1 (compress faster) - 9 (compress better) for gzip/bzip2/xz output file,
+    /// set gzip/bzip2/xz/zstd compression level 1 (compress faster) - 9 (compress better) for output file,
     /// just work with option -o/--out
     #[arg(long = "compress-level", default_value_t = 6, global = true, value_parser = value_parser!(u32).range(1..=9), value_name = "int",
         help_heading = Some("Global Arguments")
@@ -98,7 +98,9 @@ pub enum Subcli {
         output: Option<PathBuf>,
     },
     /// get last N records from fasta file
-    #[command(before_help = "note: the command need to read file twice, do not use in stream")]
+    #[command(
+        before_help = "note: the command need to read file twice in 2-pass mode, do not use in stream"
+    )]
     tail {
         /// input fasta file
         input: Option<String>,
