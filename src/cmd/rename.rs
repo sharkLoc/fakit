@@ -1,49 +1,63 @@
-use crate::cmd::wrap::*;
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta::{self, Record};
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
+use log::info;
 use std::path::Path;
 
 pub fn rename_fa<P: AsRef<Path> + Copy>(
     input: Option<P>,
     keep: bool,
-    prefix: Option<String>, //&str,
+    prefix: Option<String>,
     output: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fp = fasta::Reader::new(file_reader(input)?);
+    let mut fp = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
+    let mut writer = file_writer(output, compression_level)?;
+    let mut n = 0usize;
 
-    if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
+    while rset.fill(&mut fp)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            n += 1;
+            if let Some(pre) = &prefix {
+                 let newid = format!("{}{}", pre, n);
+                if keep {
+                    let mut id_split = rec.id_str().split_whitespace();
+                    id_split.next(); // skip the first part of the ID
 
-    let mut fo = fasta::Writer::new(file_writer(output, compression_level)?);
-    let mut n: usize = 0;
+                    if id_split.clone().count() > 0 {
+                        // If there are multiple parts, write the rest of the ID
+                        let desc = id_split.collect::<Vec<&str>>().join(" ");
+                        let new = format!("{} {}", newid, desc);
+                        write_record(&mut writer, new.as_bytes(), &rec.seq(), line_width)?;
+                    } else {
+                        write_record(&mut writer, newid.as_bytes(), &rec.seq(), line_width)?;
+                    }
+                } else {
+                    write_record(&mut writer, newid.as_bytes(), &rec.seq(), line_width)?;
+                }
+            } else {
+                if keep {
+                    write_record(&mut writer, rec.id(), &rec.seq(), line_width)?;
+                } else {
+                    let mut id_split = rec.id_str().split_whitespace();
+                    if let Some(first_id) = id_split.next() {
+                        write_record(&mut writer, first_id.as_bytes(), &rec.seq(), line_width)?;
+                    }
+                }
+            }
 
-    let prefix_fn = |n: usize, rec: &Record| -> String {
-        if let Some(pre) = &prefix {
-            format!("{}{}", pre, n)
-        } else {
-            rec.id().to_string()
         }
-    };
-
-    for rec in fp.records().flatten() {
-        n += 1;
-        let newid = prefix_fn(n, &rec);
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        let record = if keep {
-            Record::with_attrs(&newid, rec.desc(), seq_new.as_slice())
-        } else {
-            Record::with_attrs(&newid, None, seq_new.as_slice())
-        };
-        fo.write_record(&record)?;
     }
-    fo.flush()?;
+    writer.flush()?;
 
+    info!("total renamed records count: {}", n);
     Ok(())
 }
