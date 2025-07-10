@@ -1,7 +1,6 @@
-use crate::{errors::FakitError, utils::*};
-use bio::io::fasta;
-use log::*;
-use nthash::nthash;
+use crate::{errors::FakitError, utils::file_reader, utils::file_writer};
+use log::info;
+use paraseq::fasta::{Reader, RecordSet};
 use std::collections::HashMap;
 
 pub fn kmer_count(
@@ -11,40 +10,35 @@ pub fn kmer_count(
     output: Option<&String>,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let reader = file_reader(input).map(fasta::Reader::new)?;
-    if let Some(file) = input {
-        info!("reading from file: {}", file);
-    } else {
-        info!("reading from stdin");
-    }
-
+    let mut reader = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
     let mut writer = file_writer(output, compression_level)?;
     let mut kmers = HashMap::new();
+    info!("Kmer counting with kmer length: {}", kmer_len);
+    let mut count = 0usize;
 
-    for rec in reader.records().flatten() {
-        let (mut sidx, mut eidx) = (0, kmer_len);
-        let khash = nthash(rec.seq(), kmer_len);
-        let len = rec.seq().len();
-
-        while eidx <= len {
-            let kseq = &rec.seq()[sidx..eidx];
-            let khash_this = nthash(kseq, kmer_len)[0];
-            if khash.contains(&khash_this) {
-                *kmers.entry(kseq.to_owned()).or_insert(0_u64) += 1;
+    while rset.fill(&mut reader)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            let seq = rec.seq();
+            if seq.len() < kmer_len {
+                continue;
             }
-            sidx += 1;
-            eidx += 1;
+            for kmer in seq.windows(kmer_len) {
+                *kmers.entry(kmer.to_vec()).or_insert(0_u64) += 1;
+            }
         }
     }
 
     if header {
-        writer.write_all("kmer\tcount\n".as_bytes())?;
+        writer.write_all(b"kmer\tcount\n")?;
     }
     for (k, v) in kmers {
-        writer.write_all(k.as_slice())?;
+        writer.write_all(&k)?;
         writer.write_all(format!("\t{}\n", v).as_bytes())?;
+        count += 1;
     }
     writer.flush()?;
 
+    info!("total count kmer type: {}", count);
     Ok(())
 }

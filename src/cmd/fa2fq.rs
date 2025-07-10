@@ -3,12 +3,16 @@ use crate::{
     utils::{file_reader, file_writer},
 };
 use log::info;
-use paraseq::fasta::{Reader, RecordSet};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::{io::BufReader, path::Path};
 
 pub fn fake_quality<P: AsRef<Path> + Copy>(
     input: Option<P>,
     qual: char,
+    keep: bool,
     out: Option<P>,
     compression_level: u32,
 ) -> Result<(), FakitError> {
@@ -21,7 +25,14 @@ pub fn fake_quality<P: AsRef<Path> + Copy>(
     while rset.fill(&mut rdr)? {
         for rec in rset.iter().map_while(Result::ok) {
             wtr.write_all(b"@")?;
-            wtr.write_all(rec.id())?;
+            if keep {
+                wtr.write_all(rec.id())?;
+            } else {
+                let mut id_split = rec.id_str().split_whitespace();
+                if let Some(first_id) = id_split.next() {
+                    wtr.write_all(first_id.as_bytes())?;
+                }
+            }
             wtr.write_all(b"\n")?;
             wtr.write_all(&rec.seq())?;
             wtr.write_all(b"\n")?;

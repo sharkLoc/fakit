@@ -1,8 +1,10 @@
-use crate::cmd::wrap::*;
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta;
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::info;
+use paraseq::fasta::{Reader, RecordSet};
 use std::path::Path;
 
 pub fn range_fasta<P: AsRef<Path> + Copy>(
@@ -13,25 +15,32 @@ pub fn range_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fp_reader = file_reader(input).map(fasta::Reader::new)?;
-
-    if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
+    let mut fp_reader = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
     info!("skip first {} records", skip);
     info!("get {} records", take);
 
-    let mut fp_writer = file_writer(output, compression_level).map(fasta::Writer::new)?;
-    let mut count = 0usize;
-    for rec in fp_reader.records().skip(skip).take(take).flatten() {
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        fp_writer.write(rec.id(), rec.desc(), seq_new.as_slice())?;
-        count += 1;
+    let mut fp_writer = file_writer(output, compression_level)?;
+    let mut skipped = 0usize;
+    let mut taken = 0usize;
+
+    'outer: while rset.fill(&mut fp_reader)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            if skipped < skip {
+                skipped += 1;
+                continue;
+            }
+            if taken >= take {
+                break 'outer;
+            }
+            if taken < take {
+                write_record(&mut fp_writer, rec.id(), &rec.seq(), line_width)?;
+                taken += 1;
+            }
+        }
     }
     fp_writer.flush()?;
-    info!("total get sequence number: {}", count);
+    info!("total get sequence number: {}", taken);
 
     Ok(())
 }

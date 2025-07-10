@@ -51,11 +51,13 @@ fn main() -> Result<(), Error> {
         Subcli::fa2fq {
             input,
             qual,
+            keep,
             output,
         } => {
             fake_quality(
                 input.as_ref(),
                 qual,
+                keep,
                 output.as_ref(),
                 args.compression_level,
             )?;

@@ -470,7 +470,6 @@ dependencies = [
  "flate2",
  "log",
  "noodles",
- "nthash",
  "paraseq",
  "rand 0.9.1",
  "rand_pcg",
@@ -858,15 +857,6 @@ checksum = "5706ab80079f1fdbb3ceb81f24acd1a7be9082421bff33fd4766d4c88ed69d81"
 dependencies = [
  "bstr",
  "memchr",
-]
-
-[[package]]
-name = "nthash"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "752ed59e65983a1ba3166fcdf684107b9f43913a937d3250aa98f26ce586c2d0"
-dependencies = [
- "thiserror 1.0.69",
 ]
 
 [[package]]
