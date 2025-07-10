@@ -45,6 +45,7 @@ Compression level:
 pub struct Args {
     #[clap(subcommand)]
     pub command: Subcli,
+
     /// line width when outputting fasta sequences, 0 for no wrap
     #[arg(short = 'w', long = "line-width", default_value_t = 70, global = true, value_name = "int",
         help_heading = Some("Global Arguments")
@@ -52,7 +53,7 @@ pub struct Args {
     pub width: usize,
 
     /// set gzip/bzip2/xz/zstd compression level 1 (compress faster) - 9 (compress better) for output file,
-    /// just work with option -o/--out
+    /// {n}just work with option -o/--out
     #[arg(long = "compress-level", default_value_t = 6, global = true, value_parser = value_parser!(u32).range(1..=9), value_name = "int",
         help_heading = Some("Global Arguments")
     )]
