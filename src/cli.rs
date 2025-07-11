@@ -265,12 +265,16 @@ pub enum Subcli {
     seq {
         /// input fasta file, or read from stdin
         input: Option<String>,
-        /// if specified, convert all bases to lowercase
-        #[arg(short = 'l', long = "lower-case")]
+        /// convert all bases to lowercase
+        #[arg(short = 'l', long = "lower-case", help_heading = Some("FLAGS"))]
         lower: bool,
-        /// if specified, convert all bases to uppercase
-        #[arg(short = 'u', long = "upper-case")]
+        /// convert all bases to uppercase
+        #[arg(short = 'u', long = "upper-case", help_heading = Some("FLAGS"))]
         upper: bool,
+
+        /// only print sequences
+        #[arg(short = 's', long = "seq", help_heading = Some("FLAGS"))]
+        sequence: bool,
         /// if specified, fasta sequences shorter than length required will be discarded
         #[arg(short = 'm', long = "min-len", value_name = "int")]
         min: Option<usize>,
