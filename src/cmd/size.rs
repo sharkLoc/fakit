@@ -32,12 +32,6 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
 ) -> Result<(), FakitError> {
     let fa_reader = file_reader(input).map(fasta::Reader::new)?;
 
-    if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
-
     let mut out = file_writer(output, compression_level)?;
     if all {
         out.write_all(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;

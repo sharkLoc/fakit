@@ -1,8 +1,11 @@
-use crate::utils::*;
-use crate::{cmd::wrap::*, errors::FakitError};
-use bio::io::fasta;
-use log::*;
-use std::{collections::HashMap, path::Path};
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use paraseq::fasta::{Reader, RecordSet};
+use std::path::Path;
+use  log::info;
 
 pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -11,48 +14,40 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fa_reader = file_reader(input).map(fasta::Reader::new)?;
+    let mut fa_reader = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
+    let mut out_writer = file_writer(out, compression_level)?;
+    let mut conter = 0usize;
 
-    if let Some(file) = input {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
-
-    let maps = HashMap::from([
-        (b'A', b'T'),
-        (b'T', b'A'),
-        (b'G', b'C'),
-        (b'C', b'G'),
-        (b'N', b'N'),
-        (b'a', b't'),
-        (b't', b'a'),
-        (b'g', b'c'),
-        (b'c', b'g'),
-        (b'n', b'n'),
-    ]);
-
-    let mut out_writer = file_writer(out, compression_level).map(fasta::Writer::new)?;
-
-    for rec in fa_reader.records().flatten() {
-        let rev_seq = rec.seq().iter().copied().rev().collect::<Vec<u8>>();
-
-        if rev {
-            let seq_new = wrap_fasta(rev_seq.as_slice(), line_width)?;
-            out_writer.write(rec.id(), rec.desc(), &seq_new)?;
-        } else {
-            let rc_seq = rev_seq
-                .iter()
-                .map(|x| maps.get(x).unwrap_or(&b'N'))
-                .collect::<Vec<&u8>>();
-
-            let rev_comp = rc_seq.iter().map(|x| **x).collect::<Vec<u8>>();
-            let seq_new = wrap_fasta(rev_comp.as_slice(), line_width)?;
-
-            out_writer.write(rec.id(), rec.desc(), seq_new.as_slice())?;
+    while rset.fill(&mut fa_reader)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            let seq = rec.seq();
+            let new_seq = if rev {
+                seq.iter().copied().rev().collect::<Vec<u8>>()
+            } else {
+                seq.iter()
+                    .rev()
+                    .map(|x| match x {
+                        b'A' => b'T',
+                        b'T' => b'A',
+                        b'G' => b'C',
+                        b'C' => b'G',
+                        b'N' => b'N',
+                        b'a' => b't',
+                        b't' => b'a',
+                        b'g' => b'c',
+                        b'c' => b'g',
+                        b'n' => b'n',
+                        _ => b'N',
+                    })
+                    .collect::<Vec<u8>>()
+            };
+            write_record(&mut out_writer, rec.id(), &new_seq, line_width)?;
+            conter += 1;
         }
     }
     out_writer.flush()?;
-
+    
+    info!("total sequences processed count: {}", conter);
     Ok(())
 }

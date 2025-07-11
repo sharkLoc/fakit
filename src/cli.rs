@@ -181,6 +181,7 @@ pub enum Subcli {
         out: Option<String>,
     },
     /// rename sequence id in fasta file
+    #[command(visible_alias = "rn")]
     rename {
         /// input fasta file, or read from stdin
         input: Option<String>,
@@ -355,6 +356,7 @@ pub enum Subcli {
         out: Option<String>,
     },
     /// shuffle fasta sequences
+    #[command(visible_alias = "shuf")]
     #[command(before_help = "note: all records will be readed into memory")]
     shuffle {
         /// input fasta file, or read from stdin
