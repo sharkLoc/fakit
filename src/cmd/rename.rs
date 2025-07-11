@@ -43,14 +43,12 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
                 } else {
                     write_record(&mut writer, newid.as_bytes(), &rec.seq(), line_width)?;
                 }
+            } else if keep {
+                write_record(&mut writer, rec.id(), &rec.seq(), line_width)?;
             } else {
-                if keep {
-                    write_record(&mut writer, rec.id(), &rec.seq(), line_width)?;
-                } else {
-                    let mut id_split = rec.id_str().split_whitespace();
-                    if let Some(first_id) = id_split.next() {
-                        write_record(&mut writer, first_id.as_bytes(), &rec.seq(), line_width)?;
-                    }
+                let mut id_split = rec.id_str().split_whitespace();
+                if let Some(first_id) = id_split.next() {
+                    write_record(&mut writer, first_id.as_bytes(), &rec.seq(), line_width)?;
                 }
             }
         }

@@ -25,10 +25,8 @@ pub fn size_fasta<P: AsRef<Path> + Copy>(
         if !noehader {
             out.write_all(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;
         }
-    } else {
-        if !noehader {
-            out.write_all(b"seq_name\tlength\n")?;
-        }
+    } else if !noehader {
+        out.write_all(b"seq_name\tlength\n")?;
     }
     let mut n = 0usize;
 

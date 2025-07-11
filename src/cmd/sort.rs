@@ -1,11 +1,16 @@
-use crate::cmd::wrap::*;
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta::{self, Record};
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::{error, info};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::path::Path;
 
-#[allow(clippy::useless_format, clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub fn sort_fasta<P: AsRef<Path> + Copy>(
     file: Option<P>,
     sort_by_name: bool,
@@ -17,13 +22,7 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fa_reader = file_reader(file).map(fasta::Reader::new)?;
-
-    if let Some(file) = file {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
+    let mut fa_reader = file_reader(file).map(Reader::new)?;
 
     let mut n = 0;
     if sort_by_gc {
@@ -50,107 +49,87 @@ pub fn sort_fasta<P: AsRef<Path> + Copy>(
     }
 
     let mut vec_reads = vec![];
-    for rec in fa_reader.records().flatten() {
-        vec_reads.push(rec);
+
+    let mut rset = RecordSet::default();
+    while rset.fill(&mut fa_reader)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            vec_reads.push((rec.id_str().to_string(), rec.seq_str().to_string()));
+        }
     }
     info!("all records has been readed into memory, start sort ...");
+    if reverse {
+        info!("output reversed result");
+    }
 
     if sort_by_name {
         info!("sort read by name");
         if reverse {
-            vec_reads.sort_by(|a, b| {
-                let read_name1 = if let Some(des) = a.desc() {
-                    format!("{} {}", a.id(), des)
-                } else {
-                    format!("{}", a.id())
-                };
-                let read_name2 = if let Some(des) = b.desc() {
-                    format!("{} {}", a.id(), des)
-                } else {
-                    format!("{}", b.id())
-                };
-                read_name2.cmp(&read_name1)
-            });
+            vec_reads.sort_by(|a, b| b.0.cmp(&a.0));
         } else {
-            vec_reads.sort_by(|a, b| {
-                let read_name1 = if let Some(des) = a.desc() {
-                    format!("{} {}", a.id(), des)
-                } else {
-                    format!("{}", a.id())
-                };
-                let read_name2 = if let Some(des) = b.desc() {
-                    format!("{} {}", a.id(), des)
-                } else {
-                    format!("{}", b.id())
-                };
-                read_name1.cmp(&read_name2)
-            });
+            vec_reads.sort_by(|a, b| a.0.cmp(&b.0));
         }
     } else if sort_by_seq {
         info!("sort read by sequence");
         if reverse {
-            vec_reads.sort_by(|a, b| b.seq().cmp(a.seq()));
+            vec_reads.sort_by(|a, b| b.1.cmp(&a.1));
         } else {
-            vec_reads.sort_by(|a, b| a.seq().cmp(b.seq()));
+            vec_reads.sort_by(|a, b| a.1.cmp(&b.1));
         }
     } else if sort_by_length {
         info!("sort read by length");
         if reverse {
-            //vec_reads.sort_by(|a, b| b.seq().len().cmp(&a.seq().len()));
-            vec_reads.sort_by_key(|b| std::cmp::Reverse(b.seq().len()))
+            vec_reads.sort_by_key(|b| std::cmp::Reverse(b.1.len()))
         } else {
-            //vec_reads.sort_by(|a, b| a.seq().len().cmp(&b.seq().len()));
-            vec_reads.sort_by_key(|a| a.seq().len())
+            vec_reads.sort_by_key(|a| a.1.len())
         }
     } else if sort_by_gc {
         info!("sort read by gc content");
         if reverse {
             vec_reads.sort_by(|a, b| {
-                let r1_gc = a
-                    .seq()
-                    .iter()
-                    .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
-                    .count() as f64
-                    / a.seq().len() as f64;
-                let r2_gc = b
-                    .seq()
-                    .iter()
-                    .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
-                    .count() as f64
-                    / b.seq().len() as f64;
+                let r1_gc =
+                    a.1.as_bytes()
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / a.1.len() as f64;
+                let r2_gc =
+                    b.1.as_bytes()
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / b.1.len() as f64;
                 r2_gc.partial_cmp(&r1_gc).unwrap()
             });
         } else {
             vec_reads.sort_by(|a, b| {
-                let r1_gc = a
-                    .seq()
-                    .iter()
-                    .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
-                    .count() as f64
-                    / a.seq().len() as f64;
-                let r2_gc = b
-                    .seq()
-                    .iter()
-                    .filter(|x| x == &&b'G' || x == &&b'C' || x == &&b'g' || x == &&b'c')
-                    .count() as f64
-                    / b.seq().len() as f64;
+                let r1_gc =
+                    a.1.as_bytes()
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / a.1.len() as f64;
+                let r2_gc =
+                    b.1.as_bytes()
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / b.1.len() as f64;
                 r1_gc.partial_cmp(&r2_gc).unwrap()
             });
         }
     }
 
     info!("sort done, start to output ...");
-    let mut fa_writer = file_writer(out, compression_level).map(fasta::Writer::new)?;
+    let mut fa_writer = file_writer(out, compression_level)?;
     for rec in vec_reads {
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        let rec_new = Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice());
-        fa_writer.write_record(&rec_new)?;
+        write_record(
+            &mut fa_writer,
+            rec.0.as_bytes(),
+            rec.1.as_bytes(),
+            line_width,
+        )?;
     }
     fa_writer.flush()?;
-
-    if reverse {
-        info!("output reversed result");
-    }
 
     Ok(())
 }

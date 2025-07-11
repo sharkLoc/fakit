@@ -13,8 +13,8 @@ mod cmd;
 mod utils;
 use cmd::{
     codon::*, fa2fq::*, faidx::*, flatten::*, grep::*, kmer::*, range::*, rename::*, reverse::*,
-    search::*, seq::*, shuffle::*, size::*, slide::*, sort::*, split::*, split2::*, subfa::*,
-    stat::*, tail::*, top::*,
+    search::*, seq::*, shuffle::*, size::*, slide::*, sort::*, split::*, split2::*, stat::*,
+    subfa::*, tail::*, top::*,
 };
 
 fn main() -> Result<(), Error> {

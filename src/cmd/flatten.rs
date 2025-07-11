@@ -6,6 +6,7 @@ use paraseq::{
 };
 use std::path::Path;
 
+#[allow(clippy::too_many_arguments)]
 pub fn flatten_fa<P: AsRef<Path> + Copy>(
     file: Option<P>,
     keep: bool,
