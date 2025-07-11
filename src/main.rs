@@ -251,8 +251,21 @@ fn main() -> Result<(), Error> {
                 args.compression_level,
             )?;
         }
-        Subcli::size { input, all, output } => {
-            size_fasta(input.as_ref(), all, output.as_ref(), args.compression_level)?;
+        Subcli::size {
+            input,
+            all,
+            keep,
+            noheader,
+            output,
+        } => {
+            size_fasta(
+                input.as_ref(),
+                all,
+                keep,
+                noheader,
+                output.as_ref(),
+                args.compression_level,
+            )?;
         }
         Subcli::subfa {
             input,

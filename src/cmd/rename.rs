@@ -3,11 +3,11 @@ use crate::{
     errors::FakitError,
     utils::{file_reader, file_writer},
 };
+use log::info;
 use paraseq::{
     fasta::{Reader, RecordSet},
     fastx::Record,
 };
-use log::info;
 use std::path::Path;
 
 pub fn rename_fa<P: AsRef<Path> + Copy>(
@@ -27,7 +27,7 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
         for rec in rset.iter().map_while(Result::ok) {
             n += 1;
             if let Some(pre) = &prefix {
-                 let newid = format!("{}{}", pre, n);
+                let newid = format!("{}{}", pre, n);
                 if keep {
                     let mut id_split = rec.id_str().split_whitespace();
                     id_split.next(); // skip the first part of the ID
@@ -53,7 +53,6 @@ pub fn rename_fa<P: AsRef<Path> + Copy>(
                     }
                 }
             }
-
         }
     }
     writer.flush()?;

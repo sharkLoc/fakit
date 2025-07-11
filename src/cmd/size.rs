@@ -1,96 +1,87 @@
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta;
-use log::*;
+use crate::{
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::{info, warn};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::path::Path;
-
-struct Seqinfo {
-    count_a: usize,
-    count_t: usize,
-    count_g: usize,
-    count_c: usize,
-    count_n: usize,
-}
-
-impl Seqinfo {
-    fn new() -> Seqinfo {
-        Seqinfo {
-            count_a: 0,
-            count_t: 0,
-            count_g: 0,
-            count_c: 0,
-            count_n: 0,
-        }
-    }
-}
 
 pub fn size_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
     all: bool,
+    keep: bool,
+    noehader: bool,
     output: Option<P>,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fa_reader = file_reader(input).map(fasta::Reader::new)?;
+    let mut fa_reader = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
 
     let mut out = file_writer(output, compression_level)?;
     if all {
-        out.write_all(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;
+        if !noehader {
+            out.write_all(b"seq_name\tlength\tcount_A\tcount_T\tcount_G\tcount_C\tcount_N\n")?;
+        }
     } else {
-        out.write_all(b"seq_name\tlength\n")?;
+        if !noehader {
+            out.write_all(b"seq_name\tlength\n")?;
+        }
     }
-    //let mut recs = fa_reader.records();
     let mut n = 0usize;
-    //while let Some(each) = recs.next() {
-    for rec in fa_reader.records().flatten() {
-        n += 1;
-        //let rec = each?;
-        if all {
-            let mut info = Seqinfo::new();
-            let mut pos = 0usize;
 
-            for nt in rec.seq().iter() {
-                pos += 1;
-                match nt {
-                    &b'A' | &b'a' => {
-                        info.count_a += 1;
-                    }
-                    &b'T' | &b't' => {
-                        info.count_t += 1;
-                    }
-                    &b'G' | &b'g' => {
-                        info.count_g += 1;
-                    }
-                    &b'C' | &b'c' => {
-                        info.count_c += 1;
-                    }
-                    &b'N' | &b'n' => {
-                        info.count_n += 1;
-                    }
-                    _ => {
-                        warn!(
+    while rset.fill(&mut fa_reader)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            n += 1;
+            let seq = rec.seq();
+            if all {
+                let mut count_a = 0usize;
+                let mut count_t = 0usize;
+                let mut count_g = 0usize;
+                let mut count_c = 0usize;
+                let mut count_n = 0usize;
+                for (pos, nt) in seq.iter().enumerate() {
+                    match nt {
+                        b'A' | b'a' => count_a += 1,
+                        b'T' | b't' => count_t += 1,
+                        b'G' | b'g' => count_g += 1,
+                        b'C' | b'c' => count_c += 1,
+                        b'N' | b'n' => count_n += 1,
+                        _ => warn!(
                             "Error DNA base code in sequence {} position: {}",
-                            rec.id(),
-                            pos
-                        );
-                        continue;
+                            rec.id_str(),
+                            pos + 1
+                        ),
                     }
                 }
+                let buf = format!(
+                    "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                    match keep {
+                        true => rec.id_str(),
+                        false => rec.id_str().split_whitespace().next().unwrap_or(""),
+                    },
+                    seq.len(),
+                    count_a,
+                    count_t,
+                    count_g,
+                    count_c,
+                    count_n
+                );
+                out.write_all(buf.as_bytes())?;
+            } else {
+                let buf = format!(
+                    "{}\t{}\n",
+                    if keep {
+                        rec.id_str()
+                    } else {
+                        rec.id_str().split_whitespace().next().unwrap_or("")
+                    },
+                    seq.len()
+                );
+                out.write_all(buf.as_bytes())?;
             }
-
-            let buf = format!(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                rec.id(),
-                rec.seq().len(),
-                info.count_a,
-                info.count_t,
-                info.count_g,
-                info.count_c,
-                info.count_n
-            );
-            out.write_all(buf.as_bytes())?;
-        } else {
-            let buf = format!("{}\t{}\n", rec.id(), rec.seq().len());
-            out.write_all(buf.as_bytes())?;
         }
     }
     out.flush()?;

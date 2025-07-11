@@ -44,7 +44,6 @@ pub fn seq_fa<P: AsRef<Path> + Copy>(
     let mut writer = file_writer(output, compression_level)?;
     let mut count = 0usize;
 
-
     while rset.fill(&mut reader)? {
         for rec in rset.iter().map_while(Result::ok) {
             if let Some(min_len) = min_len {
@@ -107,7 +106,6 @@ pub fn seq_fa<P: AsRef<Path> + Copy>(
             } else {
                 write_record(&mut writer, rec.id(), seqfa.as_slice(), line_width)?;
             }
-            
         }
     }
     writer.flush()?;

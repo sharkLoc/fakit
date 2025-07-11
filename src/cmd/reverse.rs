@@ -3,9 +3,9 @@ use crate::{
     errors::FakitError,
     utils::{file_reader, file_writer},
 };
+use log::info;
 use paraseq::fasta::{Reader, RecordSet};
 use std::path::Path;
-use  log::info;
 
 pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -47,7 +47,7 @@ pub fn reverse_comp_seq<P: AsRef<Path> + Copy>(
         }
     }
     out_writer.flush()?;
-    
+
     info!("total sequences processed count: {}", conter);
     Ok(())
 }

@@ -26,4 +26,7 @@ pub enum FakitError {
 
     #[error("ParaseqFastaError")]
     ParaseqFastaError(#[from] paraseq::fasta::Error),
+
+    #[error("ProcessError")]
+    ProcessError(#[from] paraseq::parallel::ProcessError),
 }

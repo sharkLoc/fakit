@@ -471,6 +471,7 @@ dependencies = [
  "log",
  "noodles",
  "paraseq",
+ "parking_lot",
  "rand 0.9.1",
  "rand_pcg",
  "regex",

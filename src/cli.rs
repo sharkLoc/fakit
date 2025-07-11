@@ -375,6 +375,12 @@ pub enum Subcli {
         /// if specified, show more information
         #[arg(short='a', long="all", help_heading=Some("FLAGS"))]
         all: bool,
+        /// if specified, keep sequence id description
+        #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
+        keep: bool,
+        /// no header in output file
+        #[arg(short = 'n', long = "no-header", help_heading = Some("FLAGS"))]
+        noheader: bool,
         /// output file name or write to stdout
         #[arg(short = 'o', long = "out", value_name = "str")]
         output: Option<String>,
