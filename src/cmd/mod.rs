@@ -16,7 +16,7 @@ pub mod sort;
 pub mod split;
 pub mod split2;
 pub mod subfa;
-pub mod summ;
+pub mod stat;
 pub mod tail;
 pub mod top;
 pub mod wrap;
