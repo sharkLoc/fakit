@@ -410,6 +410,9 @@ pub enum Subcli {
         /// set output file extension, eg. fa, fa.gz, fna.xz, fna.bz2
         #[arg(short = 'e', long = "ext", value_name = "str")]
         ext: String,
+        /// if specified, keep sequence id description
+        #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
+        keep: bool,
         /// split fasta file output dir, default: current dir
         #[arg(short = 'o', long = "outdir", value_name = "str")]
         outdir: Option<String>,

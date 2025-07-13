@@ -303,10 +303,16 @@ fn main() -> Result<(), Error> {
                 summary_fa(buf, all, None, args.compression_level)?;
             }
         }
-        Subcli::split { input, ext, outdir } => {
+        Subcli::split {
+            input,
+            ext,
+            keep,
+            outdir,
+        } => {
             split_fa(
                 input.as_ref(),
                 ext,
+                keep,
                 outdir.as_ref(),
                 args.width,
                 args.compression_level,

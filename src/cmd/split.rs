@@ -1,39 +1,41 @@
-use crate::cmd::wrap::*;
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta::{self, Record};
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::path::Path;
 use std::path::PathBuf;
 
 pub fn split_fa<P: AsRef<Path> + Copy>(
     input: Option<P>,
     ext: String,
+    keep: bool,
     outdir: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fp = fasta::Reader::new(file_reader(input)?);
+    let mut fp = file_reader(input).map(Reader::new)?;
+    let mut rset = RecordSet::default();
 
-    if let Some(input) = input {
-        info!("reading form file: {:?}", input.as_ref());
-    } else {
-        info!("reading form stdin");
-    }
+    while rset.fill(&mut fp)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            let id = rec.id_str().split_whitespace().next().unwrap();
+            let path = match outdir {
+                Some(dir) => dir.as_ref().join(format!("{}.{}", id, ext)),
+                None => PathBuf::from(format!("./{}.{}", id, ext)),
+            };
 
-    for rec in fp.records().flatten() {
-        let path = if let Some(outdir) = &outdir {
-            outdir.as_ref().join(format!("{}.{}", rec.id(), ext))
-        } else {
-            PathBuf::from(format!("./{}.{}", rec.id(), ext))
-        };
-
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        let rec_new = Record::with_attrs(rec.id(), rec.desc(), seq_new.as_slice());
-
-        let mut fo = fasta::Writer::new(file_writer(Some(&path), compression_level)?);
-        fo.write_record(&rec_new)?;
-        fo.flush()?;
+            let mut writer = file_writer(Some(&path), compression_level)?;
+            match keep {
+                true => write_record(&mut writer, rec.id(), &rec.seq(), line_width)?,
+                false => write_record(&mut writer, id.as_bytes(), &rec.seq(), line_width)?,
+            }
+            writer.flush()?;
+        }
     }
 
     Ok(())
