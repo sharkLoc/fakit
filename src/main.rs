@@ -154,12 +154,13 @@ fn main() -> Result<(), Error> {
             keep,
             output,
         } => {
-            silding_window(
+            sliding_window(
                 step,
                 wind,
                 input.as_ref(),
                 output.as_ref(),
                 keep,
+                args.width,
                 args.compression_level,
             )?;
         }

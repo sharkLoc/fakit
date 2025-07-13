@@ -1,96 +1,85 @@
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta;
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::{error, info};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::path::Path;
 
-pub fn silding_window<P: AsRef<Path> + Copy>(
+pub fn sliding_window<P: AsRef<Path> + Copy>(
     step: usize,
     wind: usize,
     file: Option<P>,
     out: Option<P>,
     keep: bool,
+    line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fp = fasta::Reader::new(file_reader(file)?);
-
+    let mut fp = file_reader(file).map(Reader::new)?;
+    let mut rset = RecordSet::default();
     if step == 0 {
         error!("step size can't be 0");
         std::process::exit(1);
-    }
-
-    if let Some(file) = file {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
     }
     info!("window size : {}", wind);
     info!("step size: {}", step);
 
     let mut fo = file_writer(out, compression_level)?;
-    let mut windows = wind;
-    for rec in fp.records().flatten() {
-        let seq = rec.seq();
-        let len = seq.len();
-        let mut start = 0;
-        loop {
-            if windows < len {
-                let fa = &seq[start..windows].to_ascii_uppercase();
-                let gc =
-                    fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64 / wind as f64;
-                let fa_str = std::str::from_utf8(fa)?;
-                let out = if keep {
-                    format!(
-                        ">{} {}-{}:{:.4}\n{}\n",
-                        rec.id(),
-                        start + 1,
-                        windows,
-                        gc,
-                        fa_str
-                    )
+    while rset.fill(&mut fp)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            let seq = rec.seq();
+            let len = seq.len();
+            let mut start = 0;
+            let mut windows = wind;
+            loop {
+                if windows < len {
+                    let fa = &seq[start..windows];
+                    let gc = fa
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / wind as f64;
+                    if keep {
+                        let id_desc =
+                            format!("{} {}-{}:{:.4}", rec.id_str(), start + 1, windows, gc);
+                        write_record(&mut fo, id_desc.as_bytes(), fa, line_width)?;
+                    } else {
+                        fo.write_all(rec.id())?;
+                        let desc = format!(" {}-{}:{:.4}\t", start + 1, windows, gc,);
+                        fo.write_all(desc.as_bytes())?;
+                        fo.write_all(fa)?;
+                        fo.write_all(b"\n")?;
+                    };
+                    start += step;
+                    windows += step;
                 } else {
-                    format!(
-                        "{}\t{}\t{}\t{:.4}\t{}\n",
-                        rec.id(),
-                        start + 1,
-                        windows,
-                        gc,
-                        fa_str
-                    )
-                };
-                fo.write_all(out.as_bytes())?;
-                start += step;
-                windows += step;
-            } else {
-                let fa = &seq[start..len].to_ascii_uppercase();
-                let gc = fa.iter().filter(|x| *x == &b'G' || *x == &b'C').count() as f64
-                    / (len - start) as f64;
-                let fa_str = std::str::from_utf8(fa)?;
-                let out = if keep {
-                    format!(
-                        ">{} {}-{}:{:.4}\n{}\n",
-                        rec.id(),
-                        start + 1,
-                        len,
-                        gc,
-                        fa_str
-                    )
-                } else {
-                    format!(
-                        "{}\t{}\t{}\t{:.4}\t{}\n",
-                        rec.id(),
-                        start + 1,
-                        len,
-                        gc,
-                        fa_str
-                    )
-                };
-                fo.write_all(out.as_bytes())?;
-                windows = wind;
-                break;
+                    let fa = &seq[start..len];
+                    let gc = fa
+                        .iter()
+                        .filter(|x| matches!(x, &b'G' | &b'C' | &b'g' | &b'c'))
+                        .count() as f64
+                        / (len - start) as f64;
+                    if keep {
+                        let id_desc = format!("{} {}-{}:{:.4}", rec.id_str(), start + 1, len, gc);
+                        write_record(&mut fo, id_desc.as_bytes(), fa, line_width)?;
+                    } else {
+                        fo.write_all(rec.id())?;
+                        let desc = format!(" {}-{}:{:.4}\t", start + 1, len, gc,);
+                        fo.write_all(desc.as_bytes())?;
+                        fo.write_all(fa)?;
+                        fo.write_all(b"\n")?;
+                    }
+                    // rset for next record
+                    break;
+                }
             }
         }
     }
+
     fo.flush()?;
 
     Ok(())
