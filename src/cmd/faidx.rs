@@ -3,8 +3,7 @@ use anyhow::{Ok, Result};
 use log::{error, info, warn};
 use noodles::core::{Region, position::Position, region::interval::Interval};
 use noodles::fasta::{self, fai, index, indexed_reader};
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path,PathBuf};
 
 pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
@@ -52,30 +51,6 @@ pub fn faidx_fasta<P: AsRef<Path> + Copy>(
         let mut faidx_wtr = fai::Writer::new(fai_wtr);
         faidx_wtr.write_index(&index)?;
         info!("index done, write index file to: {}", fai);
-
-        // index fasta file and fetch seq at a time, faidx_wtr have not flush method, report a error
-        // parse region
-        /*if let Some(regs) =  region {
-            //let rdr = std::io::BufReader::new(std::fs::File::open(file)?);
-            let mut fa_index_reader =
-                indexed_reader::Builder::default().build_from_path(file)?;
-            let mut wtr = file_writer(output, compression_level).map(fasta::Writer::new)?;
-
-            for reg in regs {
-                let info = reg.split(':').collect::<Vec<&str>>();
-                let pos = info[1].split('-').collect::<Vec<&str>>();
-                info!(
-                    "parse region {}, id: {}, start: {}, end: {}",
-                    reg, info[0], pos[0], pos[1]
-                );
-
-                let start = Position::try_from(pos[0].parse::<usize>()?)?;
-                let end = Position::try_from(pos[1].parse::<usize>()?)?;
-                let reg_new = Region::new(info[0], Interval::from(start..=end));
-                let target = fa_index_reader.query(&reg_new)?;
-                wtr.write_record(&target)?;
-            }
-        }*/
     } else {
         error!("use opt -h get more help information");
         std::process::exit(1);
