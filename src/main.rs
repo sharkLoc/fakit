@@ -272,28 +272,18 @@ fn main() -> Result<(), Error> {
             input,
             seed,
             num,
-            rdc,
+            two_pass,
             output,
         } => {
-            if rdc {
-                select_fasta(
-                    input.as_ref(),
-                    num,
-                    seed,
-                    output.as_ref(),
-                    args.width,
-                    args.compression_level,
-                )?;
-            } else {
-                select_fasta2(
-                    input.as_ref(),
-                    num,
-                    seed,
-                    output.as_ref(),
-                    args.width,
-                    args.compression_level,
-                )?;
-            }
+            select_fasta(
+                input.as_ref(),
+                num,
+                seed,
+                two_pass,
+                output.as_ref(),
+                args.width,
+                args.compression_level,
+            )?;
         }
         Subcli::summ { file, all, output } => {
             let buf = file.iter().map(|x| x.as_str()).collect();

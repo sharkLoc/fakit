@@ -392,9 +392,9 @@ pub enum Subcli {
         /// set rand seed
         #[arg(short = 's', long = "seed", default_value_t = 69, value_name = "int")]
         seed: u64,
-        /// reduce much memory but cost more time
-        #[arg(short = 'r', long = "rdc", help_heading=Some("FLAGS"))]
-        rdc: bool,
+        /// if specified, use two-pass mode to reduce memory usage
+        #[arg(short = '2', long = "two-pass", help_heading = Some("FLAGS"))]
+        two_pass: bool,
         /// subseq number
         #[arg(short = 'n', long = "num", value_name = "int")]
         num: usize,

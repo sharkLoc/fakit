@@ -3,7 +3,7 @@ use crate::{
     errors::FakitError,
     utils::{file_reader, file_writer},
 };
-use log::{info, error};
+use log::{error, info};
 use paraseq::fasta::{Reader, RecordSet};
 use std::path::Path;
 

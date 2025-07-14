@@ -1,98 +1,91 @@
-use crate::cmd::wrap::*;
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta;
-use log::*;
+use crate::{
+    cmd::wrap::write_record,
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::info;
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use rand::{Rng, prelude::*};
 use rand_pcg::Pcg64;
 use std::path::Path;
 
-// reduce much memory but cost more time
 pub fn select_fasta<P: AsRef<Path> + Copy>(
     file: Option<P>,
     n: usize,
     seed: u64,
+    two_pass: bool,
     out: Option<P>,
     line_width: usize,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fa_reader = fasta::Reader::new(file_reader(file)?);
-
-    if let Some(file) = file {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
+    let mut fa_reader = file_reader(file).map(Reader::new)?;
+    let mut rset = RecordSet::default();
     info!("rand seed: {}", seed);
-    info!("reduce much memory but cost more time");
+    let mut writer = file_writer(out, compression_level)?;
 
     let mut rng = Pcg64::seed_from_u64(seed);
-    let mut get: Vec<usize> = Vec::with_capacity(n);
-
-    for (order, _) in fa_reader.records().flatten().enumerate() {
-        if order < n {
-            get.push(order);
-        } else {
-            let ret = rng.random_range(0..=order);
-            if ret < n {
-                get[ret] = order;
+    let mut order = 0usize;
+    if two_pass {
+        info!("enable two pass mode");
+        let mut get: Vec<usize> = Vec::with_capacity(n);
+        while rset.fill(&mut fa_reader)? {
+            for _ in rset.iter().map_while(Result::ok) {
+                if order < n {
+                    get.push(order);
+                } else {
+                    let ret = rng.random_range(0..=order);
+                    if ret < n {
+                        get[ret] = order;
+                    }
+                }
+                order += 1;
             }
         }
-    }
 
-    let fo = file_writer(out, compression_level)?;
-    let mut w = fasta::Writer::new(fo);
-    let fa_reader2 = fasta::Reader::new(file_reader(file)?);
-    for (order, rec) in fa_reader2.records().flatten().enumerate() {
-        if get.contains(&order) {
-            let seq_new = wrap_fasta(rec.seq(), line_width)?;
-            w.write(rec.id(), rec.desc(), seq_new.as_slice())?;
+        order = 0;
+        get.sort_unstable(); // keep the order
+        info!("all records has been readed into memory, start write to output ...");
+        let mut fa_reader2 = file_reader(file).map(Reader::new)?;
+        let mut rset2 = RecordSet::default();
+        let mut idx = 0usize;
+        while rset2.fill(&mut fa_reader2)? {
+            for rec in rset2.iter().map_while(Result::ok) {
+                if idx < get.len() && order == get[idx] {
+                    write_record(&mut writer, rec.id(), &rec.seq(), line_width)?;
+                    idx += 1;
+                }
+                if idx >= get.len() {
+                    break;
+                }
+                order += 1;
+            }
         }
-    }
-    w.flush()?;
-
-    Ok(())
-}
-
-// fast mode but cost more memory
-pub fn select_fasta2<P: AsRef<Path> + Copy>(
-    file: Option<P>,
-    n: usize,
-    seed: u64,
-    out: Option<P>,
-    line_width: usize,
-    compression_level: u32,
-) -> Result<(), FakitError> {
-    if let Some(file) = file {
-        info!("reading from file: {:?}", file.as_ref());
     } else {
-        info!("reading from stdin");
-    }
-    info!("rand seed: {}", seed);
-    info!("fast mode but cost more memory");
-
-    let mut rng = Pcg64::seed_from_u64(seed);
-    let mut get: Vec<fasta::Record> = Vec::with_capacity(n);
-
-    let fa_reader = fasta::Reader::new(file_reader(file)?);
-    for (order, rec) in fa_reader.records().flatten().enumerate() {
-        if order < n {
-            get.push(rec);
-        } else {
-            let ret = rng.random_range(0..=order);
-            if ret < n {
-                get[ret] = rec;
+        let mut get = Vec::with_capacity(n);
+        while rset.fill(&mut fa_reader)? {
+            for rec in rset.iter().map_while(Result::ok) {
+                if order < n {
+                    get.push((order, rec.id_str().to_owned(), rec.seq_str().into_owned()));
+                } else {
+                    let ret = rng.random_range(0..=order);
+                    if ret < n {
+                        get[ret] = (order, rec.id_str().to_owned(), rec.seq_str().into_owned());
+                    }
+                }
+                order += 1;
             }
         }
-    }
 
-    let fo = file_writer(out, compression_level)?;
-    let mut w = fasta::Writer::new(fo);
-    for rec in get {
-        let seq_new = wrap_fasta(rec.seq(), line_width)?;
-        w.write(rec.id(), rec.desc(), seq_new.as_slice())?;
+        info!("all records has been readed into memory, start write to output ...");
+        get.sort_unstable_by_key(|x| x.0); // sort by order to keep the raw order
+        for (_, id, seq) in get {
+            write_record(&mut writer, id.as_bytes(), seq.as_bytes(), line_width)?;
+        }
     }
-    w.flush()?;
+    writer.flush()?;
 
     Ok(())
 }
