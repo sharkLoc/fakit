@@ -167,6 +167,7 @@ pub enum Subcli {
         output: Option<String>,
     },
     /// print fasta records in a range
+    #[command(visible_alias = "rg")]
     range {
         /// input fasta file, or read from stdin
         input: Option<String>,
@@ -386,6 +387,7 @@ pub enum Subcli {
         output: Option<String>,
     },
     /// subsample sequences from big fasta file
+    #[command(visible_alias = "sample")]
     subfa {
         /// input fasta file, or read from stdin
         input: Option<String>,
