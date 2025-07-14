@@ -241,6 +241,8 @@ fn main() -> Result<(), Error> {
         Subcli::search {
             input,
             pat,
+            keep,
+            ignore_case,
             Header,
             output,
         } => {
@@ -248,7 +250,9 @@ fn main() -> Result<(), Error> {
                 input.as_ref(),
                 output.as_ref(),
                 &pat,
+                ignore_case,
                 Header,
+                keep,
                 args.compression_level,
             )?;
         }

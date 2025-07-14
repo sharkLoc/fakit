@@ -256,7 +256,7 @@ pub enum Subcli {
         /// grep sequences by sequence
         #[arg(short = 's', long = "by-seq", help_heading = Some("FLAGS"))]
         seq: bool,
-        /// grep sequences by sequence
+        /// ignore case insensitive
         #[arg(short = 'i', long = "ignore-case", help_heading = Some("FLAGS"))]
         ignore: bool,
         /// output search result file name, or write to stdout
@@ -330,6 +330,12 @@ pub enum Subcli {
             value_name = "str"
         )]
         pat: String,
+        /// if specified, keep sequence id description
+        #[arg(short = 'k', long = "keep", help_heading = Some("FLAGS"))]
+        keep: bool,
+        /// ignore case insensitive
+        #[arg(short = 'i', long = "ignore-case", help_heading = Some("FLAGS"))]
+        ignore_case: bool,
         /// if specified, show header in result
         #[arg(short = 'H', long = "header", help_heading = Some("FLAGS"))]
         Header: bool,

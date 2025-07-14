@@ -1,55 +1,64 @@
-use crate::errors::FakitError;
-use crate::utils::*;
-use bio::io::fasta;
-use log::*;
-use regex::Regex;
+use crate::{
+    errors::FakitError,
+    utils::{file_reader, file_writer},
+};
+use log::info;
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
+use regex::RegexBuilder;
 use std::path::Path;
 
 pub fn search_fa<P: AsRef<Path> + Copy>(
     file: Option<P>,
     out: Option<P>,
     pat: &str,
+    ig: bool,
     header: bool,
+    keep: bool,
     compression_level: u32,
 ) -> Result<(), FakitError> {
-    let fp = file_reader(file).map(fasta::Reader::new)?;
+    let mut fp = file_reader(file).map(Reader::new)?;
+    let mut rset = RecordSet::default();
 
-    if let Some(file) = file {
-        info!("reading from file: {:?}", file.as_ref());
-    } else {
-        info!("reading from stdin");
-    }
     info!("regex pattern is: {}", pat);
-
-    let re = Regex::new(pat)?;
-    let mut fo = file_writer(out, compression_level)?;
+    let re = RegexBuilder::new(pat)
+        .case_insensitive(ig)
+        .unicode(true)
+        .build()?;
+    let mut writer = file_writer(out, compression_level)?;
     if header {
-        fo.write_all("sequence_name\tstart\tend\tpattern\tlength\tsequence\n".as_bytes())?;
+        writer.write_all(b"sequence_name\tstart\tend\tpattern\tlength\tsequence\n")?;
     }
 
-    for rec in fp.records().flatten() {
-        let seq = rec.seq().to_ascii_uppercase();
-        let seq_str = std::str::from_utf8(seq.as_slice())?;
-        let result = re.captures_iter(seq_str);
-        for ret in result {
-            let group = ret.len();
-            for i in 0..group {
-                if let Some(x) = ret.get(i) {
-                    let out_str = format!(
-                        "{}\t{}\t{}\t{}\t{}\t{}\n",
-                        rec.id(),
-                        x.start() + 1,
-                        x.end(),
-                        pat,
-                        x.end() - x.start(),
-                        x.as_str()
-                    );
-                    fo.write_all(out_str.as_bytes())?;
+    while rset.fill(&mut fp)? {
+        for rec in rset.iter().map_while(Result::ok) {
+            let seq = rec.seq_str();
+            let result = re.captures_iter(&seq);
+            for ret in result {
+                let group = ret.len();
+                for i in 0..group {
+                    if let Some(x) = ret.get(i) {
+                        if keep {
+                            writer.write_all(rec.id())?;
+                        } else {
+                            writer.write_all(
+                                rec.id_str().split_whitespace().next().unwrap().as_bytes(),
+                            )?;
+                        }
+                        writer
+                            .write_all(format!("\t{}\t{}\t", x.start() + 1, x.end()).as_bytes())?;
+                        writer.write_all(pat.as_bytes())?;
+                        writer.write_all(format!("\t{}\t", x.end() - x.start()).as_bytes())?;
+                        writer.write_all(x.as_str().as_bytes())?;
+                        writer.write_all(b"\n")?;
+                    }
                 }
             }
         }
     }
-    fo.flush()?;
+    writer.flush()?;
 
     Ok(())
 }
