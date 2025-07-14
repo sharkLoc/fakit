@@ -2,8 +2,11 @@ use crate::{
     errors::FakitError,
     utils::{file_reader, file_writer},
 };
-use bio::io::fasta;
-use log::*;
+use log::{error, warn};
+use paraseq::{
+    fasta::{Reader, RecordSet},
+    fastx::Record,
+};
 use std::path::Path;
 
 #[derive(Debug)]
@@ -62,6 +65,10 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
         std::process::exit(1);
     }
 
+    if input.is_empty() {
+        error!("{}", FakitError::FileNotFound);
+        std::process::exit(1);
+    }
     let mut fo = file_writer(output, compression_level)?;
     if all {
         fo.write_all("file\tcount_A\tcount_C\tcount_G\tcount_T\tcount_N\trate_GC\trate_N\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n".as_bytes())?;
@@ -69,56 +76,43 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
         fo.write_all("file\tnum_seq\tsum_len\tmin_len\tmean_len\tmax_len\n".as_bytes())?;
     }
 
-    for i in input {
-        let mut info = Seqinfo::new(i.as_ref().to_string_lossy().to_string());
-        let file_in = Some(i);
+    for file in input {
+        let mut info = Seqinfo::new(file.as_ref().to_string_lossy().to_string());
         let mut min: Option<usize> = None;
 
-        let fp = fasta::Reader::new(file_reader(file_in)?);
-        for rec in fp.records().flatten() {
-            let mut pos = 0usize;
-            info.num_seq += 1;
-            let seq_len = rec.seq().len();
-            info.sum_len += seq_len;
+        let mut fp = file_reader(Some(file)).map(Reader::new)?;
+        let mut rset = RecordSet::default();
 
-            if seq_len > info.max_len {
-                info.max_len = seq_len;
-            }
-            min = if let Some(min) = min {
-                if seq_len < min {
-                    Some(seq_len)
-                } else {
-                    Some(min)
+        while rset.fill(&mut fp)? {
+            for rec in rset.iter().map_while(Result::ok) {
+                info.num_seq += 1;
+                let seq_len = rec.seq().len();
+                info.sum_len += seq_len;
+
+                if seq_len > info.max_len {
+                    info.max_len = seq_len;
                 }
-            } else {
-                Some(seq_len)
-            };
-            for nt in rec.seq().iter() {
-                pos += 1;
-                match nt {
-                    &b'A' | &b'a' => {
-                        info.count_a += 1;
+                min = if let Some(min) = min {
+                    if seq_len < min {
+                        Some(seq_len)
+                    } else {
+                        Some(min)
                     }
-                    &b'T' | &b't' => {
-                        info.count_t += 1;
-                    }
-                    &b'G' | &b'g' => {
-                        info.count_g += 1;
-                    }
-                    &b'C' | &b'c' => {
-                        info.count_c += 1;
-                    }
-                    &b'N' | &b'n' => {
-                        info.count_n += 1;
-                    }
-                    _ => {
-                        warn!(
+                } else {
+                    Some(seq_len)
+                };
+                for (pos, nt) in rec.seq().iter().enumerate() {
+                    match nt {
+                        &b'A' | &b'a' => info.count_a += 1,
+                        &b'T' | &b't' => info.count_t += 1,
+                        &b'G' | &b'g' => info.count_g += 1,
+                        &b'C' | &b'c' => info.count_c += 1,
+                        &b'N' | &b'n' => info.count_n += 1,
+                        _ => warn!(
                             "Error DNA base code in sequence {} position: {}",
-                            rec.id(),
-                            pos
-                        );
-                        continue;
-                        //std::process::exit(1);
+                            rec.id_str(),
+                            pos + 1
+                        ),
                     }
                 }
             }
@@ -126,8 +120,9 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
         info.min_len = min.unwrap();
         info.mean();
         info.rate();
-        if all {
-            let res = format!(
+
+        let res = match all {
+            true => format!(
                 "{}\t{}\t{}\t{}\t{}\t{}\t{:.2}\t{:.2}\t{}\t{}\t{}\t{:.0}\t{}\n",
                 info.name,
                 info.count_a,
@@ -142,15 +137,13 @@ pub fn summary_fa<P: AsRef<Path> + Copy>(
                 info.min_len,
                 info.mean_len,
                 info.max_len
-            );
-            fo.write_all(res.as_bytes())?;
-        } else {
-            let res = format!(
+            ),
+            false => format!(
                 "{}\t{}\t{}\t{}\t{:.0}\t{}\n",
                 info.name, info.num_seq, info.sum_len, info.min_len, info.mean_len, info.max_len
-            );
-            fo.write_all(res.as_bytes())?;
-        }
+            ),
+        };
+        fo.write_all(res.as_bytes())?;
     }
     fo.flush()?;
 

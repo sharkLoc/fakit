@@ -13,7 +13,6 @@ license = "MIT"
 
 [dependencies]
 anyhow = "1.0.98"
-bio = "2.3.0"
 bzip2 = "0.6.0"
 chrono = "0.4.41"
 clap = { version = "4.5.40", features = ["derive", "wrap_help"] }
