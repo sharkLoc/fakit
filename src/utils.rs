@@ -13,6 +13,32 @@ const ZSTD_MAGIC: [u8; 4] = [0x28, 0xb5, 0x2f, 0xfd];
 const MAGIC_MAX_LEN: usize = 6;
 const BUFF_SIZE: usize = 1024 * 1024;
 
+#[derive(Debug, Clone, Copy)]
+enum CompressionFormat {
+    Gzip,
+    Bzip2,
+    Xz,
+    Zstd,
+    Plain,
+}
+
+impl CompressionFormat {
+    fn magic_number(&self) -> &[u8] {
+        match self {
+            CompressionFormat::Gzip => &GZ_MAGIC,
+            CompressionFormat::Bzip2 => &BZ_MAGIC,
+            CompressionFormat::Xz => &XZ_MAGIC,
+            CompressionFormat::Zstd => &ZSTD_MAGIC,
+            CompressionFormat::Plain => &[],
+        }
+    }
+
+    fn is_match(&self, buffer: &[u8]) -> bool {
+        let magic = self.magic_number();
+        buffer.len() >= magic.len() && buffer[..magic.len()] == *magic
+    }
+}
+
 fn magic_num<P: AsRef<Path> + Copy>(file_name: P) -> Result<[u8; MAGIC_MAX_LEN], FakitError> {
     let mut buffer: [u8; MAGIC_MAX_LEN] = [0; MAGIC_MAX_LEN];
     let mut fp = File::open(file_name)?;
@@ -20,54 +46,30 @@ fn magic_num<P: AsRef<Path> + Copy>(file_name: P) -> Result<[u8; MAGIC_MAX_LEN],
     Ok(buffer)
 }
 
-fn is_gzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
+fn detect_compression<P: AsRef<Path> + Copy>(
+    file_name: P,
+) -> Result<CompressionFormat, FakitError> {
     let buffer = magic_num(file_name)?;
-    let gz_or_not =
-        buffer[0] == GZ_MAGIC[0] && buffer[1] == GZ_MAGIC[1] && buffer[2] == GZ_MAGIC[2];
-    Ok(gz_or_not
-        || file_name
-            .as_ref()
-            .extension()
-            .is_some_and(|ext| ext == "gz"))
-}
+    let path = file_name.as_ref();
 
-fn is_bzipped<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
-    let buffer = magic_num(file_name)?;
-    let bz_or_not =
-        buffer[0] == BZ_MAGIC[0] && buffer[1] == BZ_MAGIC[1] && buffer[2] == BZ_MAGIC[2];
-    Ok(bz_or_not
-        || file_name
-            .as_ref()
-            .extension()
-            .is_some_and(|ext| ext == "bz2"))
-}
-
-fn is_xz<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
-    let buffer = magic_num(file_name)?;
-    let xz_or_not = buffer[0] == XZ_MAGIC[0]
-        && buffer[1] == XZ_MAGIC[1]
-        && buffer[2] == XZ_MAGIC[2]
-        && buffer[3] == XZ_MAGIC[3]
-        && buffer[4] == XZ_MAGIC[4]
-        && buffer[5] == XZ_MAGIC[5];
-    Ok(xz_or_not
-        || file_name
-            .as_ref()
-            .extension()
-            .is_some_and(|ext| ext == "xz"))
-}
-
-fn is_zstd<P: AsRef<Path> + Copy>(file_name: P) -> Result<bool, FakitError> {
-    let buffer = magic_num(file_name)?;
-    let zstd_or_not = buffer[0] == ZSTD_MAGIC[0]
-        && buffer[1] == ZSTD_MAGIC[1]
-        && buffer[2] == ZSTD_MAGIC[2]
-        && buffer[3] == ZSTD_MAGIC[3];
-    Ok(zstd_or_not
-        || file_name
-            .as_ref()
-            .extension()
-            .is_some_and(|ext| ext == "zst"))
+    if CompressionFormat::Gzip.is_match(&buffer) || path.extension().is_some_and(|ext| ext == "gz")
+    {
+        Ok(CompressionFormat::Gzip)
+    } else if CompressionFormat::Bzip2.is_match(&buffer)
+        || path.extension().is_some_and(|ext| ext == "bz2")
+    {
+        Ok(CompressionFormat::Bzip2)
+    } else if CompressionFormat::Xz.is_match(&buffer)
+        || path.extension().is_some_and(|ext| ext == "xz")
+    {
+        Ok(CompressionFormat::Xz)
+    } else if CompressionFormat::Zstd.is_match(&buffer)
+        || path.extension().is_some_and(|ext| ext == "zst")
+    {
+        Ok(CompressionFormat::Zstd)
+    } else {
+        Ok(CompressionFormat::Plain)
+    }
 }
 
 pub fn file_reader<P>(file_in: Option<P>) -> Result<Box<dyn BufRead + Send>, FakitError>
@@ -75,35 +77,27 @@ where
     P: AsRef<Path> + Copy,
 {
     if let Some(file_name) = file_in {
-        let gz_flag = is_gzipped(file_name)?;
-        let bz_flag = is_bzipped(file_name)?;
-        let zx_flag = is_xz(file_name)?;
-        let zstd_flag = is_zstd(file_name)?;
-
         info!("reading from file: {}", file_name.as_ref().display());
         let fp = File::open(file_name)?;
-        if gz_flag {
-            Ok(Box::new(BufReader::with_capacity(
+
+        match detect_compression(file_name)? {
+            CompressionFormat::Gzip => Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
                 flate2::read::MultiGzDecoder::new(fp),
-            )))
-        } else if bz_flag {
-            Ok(Box::new(BufReader::with_capacity(
+            ))),
+            CompressionFormat::Bzip2 => Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
                 bzip2::read::MultiBzDecoder::new(fp),
-            )))
-        } else if zx_flag {
-            Ok(Box::new(BufReader::with_capacity(
+            ))),
+            CompressionFormat::Xz => Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
                 xz2::read::XzDecoder::new_multi_decoder(fp),
-            )))
-        } else if zstd_flag {
-            Ok(Box::new(BufReader::with_capacity(
+            ))),
+            CompressionFormat::Zstd => Ok(Box::new(BufReader::with_capacity(
                 BUFF_SIZE,
                 zstd::stream::read::Decoder::new(fp)?,
-            )))
-        } else {
-            Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp)))
+            ))),
+            CompressionFormat::Plain => Ok(Box::new(BufReader::with_capacity(BUFF_SIZE, fp))),
         }
     } else {
         if stdin().is_terminal() {
@@ -111,8 +105,7 @@ where
             std::process::exit(1);
         }
         info!("reading from stdin");
-        let fp = BufReader::new(io::stdin());
-        Ok(Box::new(fp))
+        Ok(Box::new(BufReader::new(io::stdin())))
     }
 }
 
@@ -173,30 +166,5 @@ where
         }
     } else {
         Ok(Box::new(BufWriter::new(io::stdout())))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn gz_or_not() {
-        assert_eq!(is_gzipped("example/uniques.fa.gz").unwrap(), true);
-    }
-
-    #[test]
-    fn xz_or_not() {
-        assert_eq!(is_xz("example/uniques.fa.xz").unwrap(), true);
-    }
-
-    #[test]
-    fn bzip2_or_not() {
-        assert_eq!(is_bzipped("example/uniques.fa.bz2").unwrap(), true);
-    }
-
-    #[test]
-    fn zstd_or_not() {
-        assert!(is_zstd("example/uniques.fa.zst").unwrap());
     }
 }

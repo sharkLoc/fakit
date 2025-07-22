@@ -3,7 +3,7 @@ use anyhow::{Ok, Result};
 use log::{error, info, warn};
 use noodles::core::{Region, position::Position, region::interval::Interval};
 use noodles::fasta::{self, fai, index, indexed_reader};
-use std::path::{Path,PathBuf};
+use std::path::{Path, PathBuf};
 
 pub fn faidx_fasta<P: AsRef<Path> + Copy>(
     input: Option<P>,
