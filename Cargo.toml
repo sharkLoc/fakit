@@ -12,21 +12,21 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.98"
+anyhow = "1.0.100"
 bzip2 = "0.6.0"
-chrono = "0.4.41"
-clap = { version = "4.5.40", features = ["derive", "wrap_help"] }
+chrono = "0.4.42"
+clap = { version = "4.5.48", features = ["derive", "wrap_help"] }
 colored = "3.0.0"
 env_logger = "0.10.2"
-flate2 = "1.1.2"
-log = "0.4.27"
+flate2 = "1.1.4"
+log = "0.4.28"
 noodles = { version = "0.97.0", features = ["core", "fasta", "fastq"] }
 paraseq = "0.2.2"
-parking_lot = "0.12.4"
+parking_lot = "0.12.5"
 rand = "0.9.1"
 rand_pcg = "0.9.0"
-regex = "1.11.1"
-thiserror = "2.0.12"
+regex = "1.12.1"
+thiserror = "2.0.17"
 xz2 = "0.1.7"
 zstd = "0.13.3"
 
