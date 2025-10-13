@@ -21,7 +21,7 @@ fn main() -> Result<(), Error> {
     let args = cli::Args::parse();
     logger(args.verbose, args.logfile, args.quiet)?;
     let start = Instant::now();
-    info!("version: {}", env!("CARGO_PKG_AUTHORS"));
+    info!("version: {}", env!("CARGO_PKG_VERSION"));
 
     match args.command {
         Subcli::topn { input, num, output } => {
